@@ -1,0 +1,8 @@
+{
+  "template_version": "1.0",
+  "project": "<update-me>",
+  "workspace_root": "/home/ddespain/workspace",
+  "session_persistence_dir": "<project-root>/conversations",
+  "audit_format": "jsonl",
+  "audit_policy": "Every chat writes to session_persistence_dir. Cross-session readable."
+}

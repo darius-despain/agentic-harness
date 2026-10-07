@@ -1,8 +1,8 @@
 {
-  "template_version": "1.0",
+  "template_version": "2.0",
   "project": "<update-me>",
-  "workspace_root": "/home/ddespain/workspace",
-  "session_persistence_dir": "<project-root>/conversations",
-  "audit_format": "jsonl",
-  "audit_policy": "Every chat writes to session_persistence_dir. Cross-session readable."
+  "session_persistence_dir": "conversations",
+  "audit_output_dir": "harness/reports",
+  "max_age_days": 30,
+  "minimum_sessions": 2
 }

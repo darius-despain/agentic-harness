@@ -1,0 +1,7 @@
+__pycache__/
+harness-config.json
+conversations/
+harness/reports/
+.env
+.env.*
+!.env.example

@@ -10,3 +10,13 @@
 - Before ending a work session, write a sanitized record using the log command when configured and writable. Include session_id, workflow_insights, changes_made, validation, blockers, and source references. Never record passwords, tokens, device codes, raw environment files, or private conversation dumps. If persistence fails, report it; do not claim the session was saved.
 - Audit reports belong outside conversations. Never promote generated suggestions into new session evidence. Apply specific, evidence-supported improvements; an isolated suggestion can justify a targeted fix but is not a recurring pattern.
 - This file and the CLI do not automatically capture chats or schedule jobs. A caller must explicitly invoke logging and auditing.
+
+## Packaged skills
+
+Use the relevant local skill when it applies; do not load all three for every task.
+
+- Software implementation and repair: `.agents/skills/harness-development-loop/SKILL.md`.
+- Explicit harness/workflow improvement: `.agents/skills/harness-improvement-loop/SKILL.md`.
+- Saving or inspecting session journals: `.agents/skills/harness-session-evidence/SKILL.md`.
+
+Skill use does not authorize deployment, publication, scheduling, or edits to unrelated projects.

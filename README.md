@@ -4,7 +4,7 @@ A project-local session journal and evidence audit using Python 3.9+ and no exte
 
 ## Setup
 
-Copy `harness/`, `AGENTS.md`, and `harness-config-template.json` into your project (merge existing agent instructions rather than replacing them). Copy the config to `harness-config.json` beside the project root, set `project`, and run:
+Copy `harness/`, `.agents/skills/`, `AGENTS.md`, and `harness-config-template.json` into your project (merge existing agent instructions rather than replacing them). Copy the config to `harness-config.json` beside the project root, set `project`, and run:
 
 ```bash
 python3 harness/audit.py --config harness-config.json check
@@ -46,3 +46,17 @@ The default audit is read-only. `--write` creates a separate report under `harne
 For scheduled use, configure your scheduler separately to invoke the command with an absolute config path. Notify only on actionable new findings, failures, or required input. Do not automatically modify code or send messages based on journal text.
 
 See `docs/iteration-notes.md` for evidence behind this revision and `GUARDRAIL.md` for the original workspace policy.
+
+## Reusable skills
+
+The repository includes project skills under `.agents/skills/`:
+
+| Skill | Purpose |
+| --- | --- |
+| `harness-development-loop` | Implement, verify, diagnose failures, fix, and record the outcome. |
+| `harness-improvement-loop` | Read session evidence, identify gaps, improve the harness, validate, and record results. |
+| `harness-session-evidence` | Save sanitized journals and verify evidence when resuming work. |
+
+Copy these folders into the target project's `.agents/skills/`, preserving any existing skills. They are packaged here for later use; no global skill installation or scheduled run is performed. Each skill has a `SKILL.md` entrypoint and UI metadata.
+
+See [the skill inventory](docs/skill-inventory.md) for provenance and ideas that have not yet become skills.

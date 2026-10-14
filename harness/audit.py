@@ -105,8 +105,9 @@ def main():
             record = json.loads(args.record.read_text())
             if not isinstance(record, dict) or not isinstance(record.get("session_id"), str) or not record["session_id"].strip():
                 raise ValueError("record requires nonempty session_id")
-            for field in ("workflow_insights", "changes_made", "validation", "references_prior_sessions"):
-                if not isinstance(record.get(field, []), list) or any(not isinstance(v, str) for v in record.get(field, [])):
+            for field in ("workflow_insights", "changes_made", "validation", "blockers", "source_references", "references_prior_sessions"):
+                values = record.get(field, [] if field == "references_prior_sessions" else None)
+                if not isinstance(values, list) or any(not isinstance(v, str) for v in values):
                     raise ValueError(f"{field} must be a list of strings")
             record["timestamp"] = timestamp(record.get("timestamp", now.isoformat())).isoformat()
             record["kind"] = "session"

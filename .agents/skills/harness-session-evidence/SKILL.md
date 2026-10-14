@@ -20,9 +20,11 @@ Prepare a temporary JSON object containing:
 - `session_id`: the actual chat ID or a stable unique ID for this work session.
 - `workflow_insights`: directly observed lessons from this session; exclude inherited proposals and generated report text.
 - `changes_made`: actual edits or actions, with affected paths.
-- `validation`: performed checks and results, including failures or unverified flows.
-- `blockers`: unresolved dependencies and the next concrete action.
+- `validation`: a list of strings describing performed checks and results, including failures or unverified flows.
+- `blockers`: a list of strings describing unresolved dependencies and the next concrete action.
 - `references_prior_sessions`: existing filenames in this journal only. Put external chat/turn IDs or file/line citations in a separate `source_references` field.
+
+`workflow_insights` and `changes_made` are also required lists of strings. Include `source_references` as a list of external chat/turn IDs or file/line citations (empty when none); keep detailed structured results in an optional `validation_details` object, never in `validation`.
 
 An optional `timestamp` must be timezone-aware ISO 8601; the CLI otherwise supplies current UTC time. Never include passwords, tokens, device codes, raw environment contents, sensitive personal details, or private transcript dumps.
 

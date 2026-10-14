@@ -27,7 +27,7 @@ class HarnessTests(unittest.TestCase):
 
     def record(self, session="one", **extra):
         return dict(timestamp="2026-10-05T12:00:00Z", session_id=session,
-                    workflow_insights=["Use config paths"], **extra)
+                    workflow_insights=["Use config paths"], changes_made=[], validation=[], blockers=[], source_references=[], **extra)
 
     def write(self, name, records):
         (self.root / "conversations" / name).write_text("\n".join(json.dumps(r) for r in records))
@@ -84,6 +84,17 @@ class HarnessTests(unittest.TestCase):
         self.path.write_text(json.dumps(self.config))
         with self.assertRaises(ValueError):
             self.report()
+
+    def test_log_schema_rejects_missing_or_structured_fields(self):
+        base = [sys.executable, str(SCRIPT), "--config", str(self.path), "log", "--record", str(self.root / "record.json")]
+        for field in ("workflow_insights", "changes_made", "validation", "blockers", "source_references"):
+            for invalid in (None, {}, [123]):
+                record = self.record()
+                record[field] = invalid
+                (self.root / "record.json").write_text(json.dumps(record))
+                result = subprocess.run(base, capture_output=True, text=True)
+                self.assertEqual(result.returncode, 1)
+        self.assertEqual(list((self.root / "conversations").glob("*.jsonl")), [])
 
     def test_cli_roundtrip_and_readonly_default(self):
         record = self.root / "record.json"

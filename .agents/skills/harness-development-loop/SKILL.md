@@ -13,6 +13,8 @@ Read applicable project instructions, inspect the actual checkout and existing c
 
 If a requirement is unclear, proceed with independent work and ask only for information that materially affects the result. Keep the original objective when a later message adds constraints or asks for status.
 
+For branch changes, commits, pushes, connector publication, or checkout cleanup, read [the Git workflow](references/git-workflow.md). Use it to preserve existing work and distinguish local commits, remote publication, and a synchronized handoff.
+
 ## Implement, verify, diagnose, repeat
 
 1. Make the smallest coherent change that satisfies the target. Preserve unrelated work. Inspect setup commands for destructive side effects before executing them.

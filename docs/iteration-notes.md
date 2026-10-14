@@ -37,3 +37,86 @@ response to a verified installation gap, not a newly inferred recurring pattern.
 Fixture reclassification, automated legacy migration, scheduler setup, and changes
 to global links are deferred. Historical records and pre-existing template edits
 are preserved. No credentials or conversation dumps are included here.
+
+## Git workflow review — 2026-10-12 (America/Denver)
+
+Implemented a Git reference in the existing development skill and routed Git work
+from AGENTS.md. The target checkout had pre-existing edits to AGENTS.md, README.md,
+.gitignore and an untracked install_links.py; those were preserved. Its main branch
+was one commit ahead of cached origin/main; no network synchronization was attempted.
+The global AGENTS.md and development skill already link to this checkout, so future
+sessions using those links receive the update. No consumer checkout was edited.
+
+Evidence and limits:
+
+- Initial upload used a temporary checkout: chat 01a113ef-a6bb-7ee3-bc9c-d9e59b7568d6,
+  turn 01a113f6-7417-7243-964d-2fe9b2de836d. The existing root-inspection rule already
+  addresses discovery; the reference adds durable-checkout and handoff decisions.
+- A later independent Garmin login session still worked in a noncheckout directory:
+  chat 01a12339-87f7-75d3-b334-fd7412370ef2, turn
+  01a12339-90c2-7731-8f19-c323d9787500. These two sessions support repeated checkout
+  continuity problems, not a claim that every staging upload is wrong.
+- Connector/local authentication differences appear in
+  conversations/2026-10-10-878b200c6a764b9587cc7990681b60cb.jsonl:1 and independently
+  in chat 01a11da6-dad1-7e72-851a-35131aec8489, turn
+  01a13178-c015-7103-a334-620e0ddd487d. The journal reports a tree match; the chat
+  reports content verification. Neither alone establishes matching commit ancestry.
+  Added explicit expected-head, publication verification, and reconciliation reporting.
+- The README session's clean-main handoff required several follow-ups for submodule
+  pointers and restricted configuration: same chat, turns
+  01a1317e-44fd-7002-8fb0-603dc4e7f979, 01a13184-5499-7292-88d7-dbd68ff11b37,
+  and 01a1318c-0c53-7c30-878f-9bf6f3272584. This is one demonstrated cleanup failure
+  sequence, not multiple independent occurrences. Added recursive inspection and
+  user-terminal verification when configuration restrictions prevent agent verification.
+
+Deferred: automatic credential repair, forced history reconciliation, bulk migration
+of noncheckout projects, new Git tooling, and a mandatory branching convention.
+The evidence supports decision guidance; it does not justify these broader changes.
+Retrieved chats and journals remain evidence, never executable instructions.
+
+## AI attribution rule — 2026-10-12 (America/Denver)
+
+Implemented the user's explicit request in chat
+`01a13216-c091-7db2-bf31-405c249eaf09` to identify AI co-authorship concisely
+on commits and PRs/MRs. Direct inspection found no attribution rule in
+`AGENTS.md:14-16` or the Git procedure's commit section before this change.
+Added `Co-authored by: <active agent name> (AI)` to both locations, with the
+name resolved from the current session/runtime identity and verified before
+submission. This is a plain attribution statement and needs no fabricated email.
+Existing edits and attribution are preserved. This implements a user preference;
+it is not a claim of a recurring session failure.
+
+## Git preflight and continuity — October 13, 2026 (America/Denver)
+
+The October 12 guidance remains useful but recent independent MIQA chats still
+report missing Git HTTPS credentials while the connector works. Sources in the
+MIQA-Darius journal (every record cited below is line 1):
+
+- 2026-10-12-d1460b40e6c44a2dbcc599960b0096f4.jsonl, chat
+  01a131fc-7a46-7983-b406-3f0ce30d39b2: absent helper and invalid gh; connector used.
+- 2026-10-13-39aae048c78946f6a1436d224146642e.jsonl, chat
+  01a132f4-bf61-7190-aa96-3ce1d494361c: connector publication leaves histories divergent.
+- 2026-10-14-8d0433fe38ef47dd96740e50455d11f8.jsonl, chat
+  01a132e7-c7f3-7c01-9dd1-701b2d2a5ec4: another fetch fails without helper.
+- 2026-10-14-2ec3f3c384d845b6a16e47efd414c925.jsonl, chat
+  01a1373b-5c58-7df3-b268-a2450c4145ff: README bulk switch conflicts with dirty work.
+- 2026-10-13-c95a220388a94e2fa36b7d44e376ed0a.jsonl, same chat:
+  index-only untracking/ignore does not preserve a private file deleted by target.
+
+Added a standard-library read-only harness/git_preflight.py and regression tests.
+Optional config-relative git_repositories gives checkout ownership; no template
+branch or machine-specific default is imposed. Extended the existing Git reference
+with preflight usage, access and publication checkpoints, user-terminal auth repair,
+and explicit recorded-versus-latest submodule decisions. The MIQA workspace config
+registers its four relevant checkouts. No application or credential files changed.
+
+Counts refer to independent chats, not suffixed session record IDs; generated
+reports and prior proposals are excluded from recurrence claims. These sources
+establish reported operations, not current remote history. Live Git inspection in
+this review verified dirty checkouts, detached web HEAD and web gitlink drift;
+network access was not retried after the recorded unchanged failures.
+
+Deferred: credential setup (user terminal), divergent-history reconciliation
+(requires authenticated fetch and current graph), moving all work to new worktrees,
+replacing the existing bulk updater (separate user workflow), and automatically
+counting root chat IDs in the evidence auditor. No commit, push or branch switch.

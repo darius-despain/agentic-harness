@@ -5,3 +5,6 @@ harness/reports/
 .env
 .env.*
 !.env.example
+
+# Personal Codex settings stay local even though the live config links here.
+codex/config.local.toml

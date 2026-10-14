@@ -23,13 +23,16 @@ Create a sanitized JSON record, for example:
   "changes_made": ["Corrected the setup command"],
   "validation": ["Dependency install completed"],
   "blockers": [],
-  "references_prior_sessions": []
+  "references_prior_sessions": [],
+  "source_references": []
 }
 ```
 
 ```bash
 python3 harness/audit.py --config harness-config.json log --record session-record.json
 ```
+
+Required fields are `session_id`, `workflow_insights`, `changes_made`, `validation`, `blockers`, and `source_references`. All except `session_id` are lists of strings; optional structured checks belong in `validation_details`. Run `check` before logging and read back the written record.
 
 The command writes a new exclusive JSONL file with a UTC timestamp. Existing journals remain untouched. Never include credentials, raw transcripts, or sensitive personal data. References should identify existing journal filenames; audit findings cite filename and line number.
 
@@ -60,3 +63,35 @@ The repository includes project skills under `.agents/skills/`:
 Copy these folders into the target project's `.agents/skills/`, preserving any existing skills. They are packaged here for later use; no global skill installation or scheduled run is performed. Each skill has a `SKILL.md` entrypoint and UI metadata.
 
 See [the skill inventory](docs/skill-inventory.md) for provenance and ideas that have not yet become skills.
+
+## Live global installation with symlinks
+
+Run `python3 harness/install_links.py` from this checkout. It links `~/.codex/AGENTS.md` and each packaged harness skill under `~/.agents/skills/` to this repository. Global instructions and skills apply across repositories; project instructions can add or override guidance. Restart Codex after installation or changes to configuration and skills.
+
+The installer also links the harness CLI directory at `~/.local/share/agentic-harness/harness`. Run it with an explicit project config, for example:
+
+```bash
+python3 ~/.local/share/agentic-harness/harness/audit.py --config /absolute/path/to/project/harness-config.json check
+```
+
+Project configs, journals, and reports remain project-specific. Do not link these across projects. The auditor's configured data paths must remain inside their project.
+
+The live `~/.codex/config.toml` points to `codex/config.local.toml` in this checkout. The installer preserves your existing config on first use. This file is ignored by Git and is machine-specific; do not force-add it. Shared instructions and skills are versioned, while personal account and MCP settings stay local. Existing files replaced by links are preserved under `~/.codex/harness-link-backups/`. Rerunning the installer is safe; it leaves matching links alone. Keep this checkout at a stable path.
+
+Symlinks make local edits take effect from a single source. They do not commit, push, or pull Git changes automatically. This installation leaves bundled Codex skills and unrelated third-party skills alone.
+
+## Git inventory and readiness
+
+Keep machine-specific `git_repositories` in each local root config, keyed by checkout name with a config-relative `path` and optional `origin` (host/owner/repository). Run read-only inventory:
+
+```bash
+python3 harness/git_preflight.py --config /absolute/project/harness-config.json
+```
+
+Review every staged/unstaged/untracked filename and recursive submodule result. Zero means top-level inspection/origin matching completed, not clean state, authentication or synchronization. Heads may be detached and refs are cached only. Private environment files are status metadata only; do not read, copy, diff, stash, stage or log contents.
+
+Before network Git work in a fresh session, read prior access checkpoints, then explicitly invoke one `--repository NAME --readiness` check. It independently checks gh account/API access and Git repository read access, suppresses diagnostics and interactive prompts, times out, and returns nonzero on any required failure. No connector or push permission is inferred. Retry a known failure only after an actual credential or executor-context change; do not automatically login when terminal access succeeds but executor access fails. No startup check or scheduler is installed.
+
+For upgrades, inspect actual symlink targets first. Shared links update with their source; copied installations require an explicit reviewed update. `install_project.py` refuses differing existing copies and `install_links.py` may copy private machine configuration: inspect scripts before invoking them. Preserve consumer configs and instructions.
+
+For a shared local installation, link each consumer's `harness` directly to the stable template's `harness/` directory. Keep `harness-config.json` beside the consumer root, use a local journal directory, and use a report path such as `.harness/reports` outside the linked directory. Back up a copied harness before replacing it with a link; retain previous reports in that backup. Invoke tools with the consumer's absolute config path. Do not use an escaping `harness/reports` path in consumer configs.

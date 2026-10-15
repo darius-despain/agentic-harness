@@ -139,6 +139,82 @@ class GitPreflightTests(unittest.TestCase):
         self.assertTrue(report["origin_credential_helper_present"])
         self.assertNotIn("fixture-scoped-helper", json.dumps(report))
 
+    def test_private_transition_uses_metadata_and_detects_deletion_and_staging(self):
+        # Populate only Git index/tree metadata; never create/read a private file.
+        blob = self.git("rev-parse", "HEAD:source.txt")
+        self.git("update-index", "--add", "--cacheinfo", f"100644,{blob},server/.env")
+        self.git("commit", "-m", "synthetic private path metadata")
+        actual = tool.run
+        calls = []
+        def metadata_only(path, *args):
+            self.assertIn(args[0], ("rev-parse", "ls-tree", "ls-files"))
+            calls.append(args)
+            return actual(path, *args)
+        with patch.object(tool, "run", side_effect=metadata_only):
+            same = tool.private_transition(self.repo, "HEAD")
+            deleted = tool.private_transition(self.repo, "HEAD~1")
+        self.assertTrue(same["private_configuration_unchanged"])
+        self.assertTrue(same["target_tracks_private_configuration"])
+        self.assertFalse(deleted["private_configuration_unchanged"])
+        self.assertEqual(deleted["private_paths_requiring_change"], ["server/.env"])
+        self.assertFalse(deleted["target_tracks_private_configuration"])
+        self.git("update-index", "--force-remove", "server/.env")
+        staged = tool.private_transition(self.repo, "HEAD")
+        self.assertFalse(staged["private_configuration_unchanged"])
+        self.assertNotIn(blob, json.dumps(staged))
+
+    def test_private_transition_rejects_missing_target_and_private_mode_change(self):
+        self.assertEqual(tool.private_transition(self.repo, "missing")["assessment"], "unavailable")
+        self.assertEqual(tool.private_transition(self.repo, "--help")["assessment"], "unavailable")
+        blob = self.git("rev-parse", "HEAD:source.txt")
+        self.git("update-index", "--add", "--cacheinfo", f"100644,{blob},.env.fixture")
+        self.git("commit", "-m", "synthetic metadata")
+        self.git("update-index", "--cacheinfo", f"100755,{blob},.env.fixture")
+        self.assertFalse(tool.private_transition(self.repo, "HEAD")["private_configuration_unchanged"])
+
+    def test_private_rename_source_remains_private(self):
+        actual = tool.run
+        def renamed(path, *args):
+            if args[0] == "status":
+                return 0, "R  public.txt\0server/.env\0"
+            return actual(path, *args)
+        with patch.object(tool, "run", side_effect=renamed):
+            change = tool.inspect(self.repo)["changes"][0]
+        self.assertTrue(change["private_configuration"])
+        self.assertEqual(change["source_path"], "server/.env")
+
+    def test_private_unmerged_or_failed_metadata_never_approves_transition(self):
+        actual = tool.run
+        blob = self.git("rev-parse", "HEAD:source.txt")
+        def unmerged(path, *args):
+            if args[0] == "ls-files":
+                return 0, f"100644 {blob} 1\t.env.fixture\0"
+            return actual(path, *args)
+        with patch.object(tool, "run", side_effect=unmerged):
+            report = tool.private_transition(self.repo, "HEAD")
+        self.assertFalse(report["private_configuration_unchanged"])
+        self.assertEqual(report["private_unmerged_paths"], [".env.fixture"])
+        def failed(path, *args):
+            return (128, "") if args[0] == "ls-tree" else actual(path, *args)
+        with patch.object(tool, "run", side_effect=failed):
+            report = tool.private_transition(self.repo, "HEAD")
+        self.assertEqual(report["assessment"], "unavailable")
+        self.assertFalse(report["private_configuration_unchanged"])
+
+    def test_target_cli_requires_owner_and_reports_local_assessment(self):
+        self.git("remote", "add", "origin", "https://github.com/fixture/app.git")
+        result = subprocess.run([sys.executable, str(SCRIPT), "--config", str(self.config),
+                                 "--repository", "app", "--target", "HEAD"],
+                                cwd="/tmp", capture_output=True, text=True)
+        self.assertEqual(result.returncode, 0)
+        report = json.loads(result.stdout)["repositories"][0]
+        self.assertTrue(report["private_transition"]["private_configuration_unchanged"])
+        self.assertFalse(report["private_transition"]["target_tracks_private_configuration"])
+        self.assertEqual(report["local_git_network_access"], "not_probed")
+        result = subprocess.run([sys.executable, str(SCRIPT), "--target", "HEAD"],
+                                cwd="/tmp", capture_output=True, text=True)
+        self.assertEqual(result.returncode, 2)
+
 
 if __name__ == "__main__":
     unittest.main()

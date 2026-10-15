@@ -120,3 +120,43 @@ Deferred: credential setup (user terminal), divergent-history reconciliation
 (requires authenticated fetch and current graph), moving all work to new worktrees,
 replacing the existing bulk updater (separate user workflow), and automatically
 counting root chat IDs in the evidence auditor. No commit, push or branch switch.
+
+## Restricted configuration recovery — October 14, 2026 (America/Denver)
+
+Reviewed configured recent journals plus four recent MIQA chats. Network Git
+failures recur independently in template journals
+`2026-10-10-878b200c6a764b9587cc7990681b60cb.jsonl:1` and
+`2026-10-14-dc70910cf4344305ab49ef4a0e36eb9f.jsonl:1`.
+Their recorded connector successes do not establish current CLI authentication.
+No unchanged network failure was retried in this review.
+
+The concrete restricted-configuration failure is chat
+`01a13d67-1ae0-7b72-8107-29549ebd4d4f`, turns
+`01a13d6b-0dc9-7682-9fb3-ae61584a4abe` and
+`01a13d6c-3760-7533-b39f-8072a6e52648`: the executor reported private files
+modified while the user's terminal reported clean and completed the rebase.
+This establishes disagreement, not its cause. The later preview obstruction
+in turn `01a13d70-8608-7ad2-9e56-4ed7d83d297d` supports leaving preserved
+previews outside until all replay finishes. These turns are one session sequence,
+not independent recurrence evidence.
+
+Implemented a read-only `--repository NAME --target TARGET_REF` assessment in
+`harness/git_preflight.py`: compare private path modes/object identities in HEAD,
+index and target, fail closed on missing metadata/unmerged private paths, and
+report target private-path presence without reading blobs or environment files.
+Rename-source private classification is retained. Added independent Git/gh
+readiness booleans while preserving the aggregate failure exit code.
+The existing Git reference now explains local continuation, normal switch
+conditions, worktree limits, and recovery tied to an actual context change.
+
+Validation: 33 automated tests passed, development skill validation passed,
+`git diff --check` passed, and live local `--target HEAD` inspection passed.
+New private-transition fixtures use synthetic tree/index metadata without
+creating working environment files. No private configuration read or edited;
+no consumer repository, credentials, refs or remote history changed.
+
+Deferred: live credential repair and history reconciliation (existing access
+checkpoint still requires a real context/credential change), paused consumer
+rebases, and application-specific startup/rate-limit fixes. The launcher-source
+selection issue in chat `01a13d93-2b6c-7f71-a1ae-7a079cf33834` was already
+resolved there through a local-filesystem fetch; it is not another auth failure.

@@ -60,6 +60,57 @@ def load_registry(config_path):
     return output
 
 
+def private_path(filename):
+    return any(p == ".env" or p.startswith(".env.") for p in Path(filename).parts)
+
+
+def private_transition(path, target):
+    """Compare tree/index metadata only; never open working files or blob contents."""
+    report = {"assessment": "unavailable", "private_configuration_unchanged": False}
+    rc, oid = run(path, "rev-parse", "--verify", "--end-of-options", target + "^{commit}")
+    if rc:
+        return report
+    target_oid = oid.strip()
+    trees = []
+    for ref in ("HEAD", target_oid):
+        rc, output = run(path, "ls-tree", "-r", "-z", ref)
+        if rc:
+            return report
+        entries = {}
+        for item in output.split("\0"):
+            if item:
+                metadata, filename = item.split("\t", 1)
+                if private_path(filename):
+                    mode, kind, blob = metadata.split()
+                    entries[filename] = (mode, blob)
+        trees.append(entries)
+    rc, output = run(path, "ls-files", "--stage", "-z")
+    if rc:
+        return report
+    index, conflicts = {}, []
+    for item in output.split("\0"):
+        if item:
+            metadata, filename = item.split("\t", 1)
+            if private_path(filename):
+                mode, blob, stage = metadata.split()
+                if stage != "0":
+                    conflicts.append(filename)
+                index[filename] = (mode, blob)
+    head, destination = trees
+    changed = sorted(p for p in head.keys() | index.keys() | destination.keys()
+                     if head.get(p) != index.get(p) or index.get(p) != destination.get(p))
+    unchanged = not changed and not conflicts
+    report.update(assessment="complete", target_commit=target_oid,
+                  private_configuration_unchanged=unchanged,
+                  private_paths_requiring_change=changed,
+                  private_unmerged_paths=sorted(set(conflicts)),
+                  target_tracks_private_configuration=bool(destination),
+                  next_action=("normal_switch_after_other_git_checks" if unchanged else
+                               "isolate_nonsecret_work_or_user_terminal"),
+                  scope="private_metadata_only_not_rebase_or_cleanliness_approval")
+    return report
+
+
 def inspect(path, expected=None, recurse=True):
     report = {"path": str(path), "inspection": "unavailable"}
     rc, top = run(path, "rev-parse", "--show-toplevel")
@@ -85,11 +136,13 @@ def inspect(path, expected=None, recurse=True):
         if not item:
             continue
         code, filename = item[:2], item[3:]
-        status.append({"code": code, "path": filename,
-                       "private_configuration": any(p == ".env" or p.startswith(".env.")
-                                                     for p in Path(filename).parts)})
+        change = {"code": code, "path": filename,
+                  "private_configuration": private_path(filename)}
         if "R" in code or "C" in code:
-            next(items, None)  # rename source, not a second status entry
+            source = next(items, "")
+            change["source_path"] = source
+            change["private_configuration"] |= private_path(source)
+        status.append(change)
     report["changes"] = status
     report["clean"] = not status
     rc, origin = run(path, "remote", "get-url", "origin")
@@ -167,6 +220,8 @@ def readiness(reports):
             repositories[origin] = probe(["git", "-C", report["path"], "ls-remote",
                                           "--exit-code", "origin", "HEAD"])
         report["readiness"] = {"gh_account": accounts[host], "git_repository": repositories[origin],
+                               "git_read_available": repositories[origin]["result"] == "success",
+                               "gh_api_available": accounts[host]["result"] == "success",
                                "connector_access": "not_tested", "push_permission": "not_tested"}
     return any(any(result.get("result") != "success" for result in r["readiness"].values()
                    if isinstance(result, dict)) or "result" in r["readiness"] for r in reports)
@@ -176,11 +231,14 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--config", type=Path, default=Path("harness-config.json"))
     parser.add_argument("--repository", help="configured checkout name; default is all")
+    parser.add_argument("--target", help="local commit/ref for private configuration transition assessment; no switch/fetch")
     parser.add_argument("--probe-remote", action="store_true", help="one noninteractive ls-remote per distinct origin")
     parser.add_argument("--readiness", action="store_true", help="explicit gh API and Git read checks; no push or connector check")
     args = parser.parse_args()
     if args.readiness and args.probe_remote:
         parser.error("choose --readiness or --probe-remote, not both")
+    if args.target and not args.repository:
+        parser.error("--target requires --repository")
     try:
         entries = load_registry(args.config)
         if args.repository:
@@ -191,6 +249,8 @@ def main():
         for name, path, expected in entries:
             report = inspect(path, expected)
             report["name"] = name
+            if args.target and report["inspection"] == "complete":
+                report["private_transition"] = private_transition(path, args.target)
             if args.probe_remote and report.get("origin") and report["inspection"] == "complete":
                 # Reuse a failure across worktrees; never repeat unchanged auth failures in bulk.
                 origin = report["origin"]
@@ -203,6 +263,7 @@ def main():
         print(json.dumps({"kind": "git_preflight", "remote_refs": "cached_only_no_fetch",
                           "repositories": reports}, indent=2))
         return int(readiness_failed or any(r["inspection"] != "complete" or r.get("origin_matches_config") is False
+                       or r.get("private_transition", {}).get("assessment", "complete") != "complete"
                        or r.get("local_git_network_access") == "failed_auth_network_or_remote" for r in reports))
     except (OSError, ValueError, TypeError, KeyError):
         print("Git preflight failed: invalid configuration or unavailable inspection; raw diagnostics suppressed", file=sys.stderr)

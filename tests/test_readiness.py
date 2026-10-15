@@ -33,6 +33,8 @@ class ReadinessTests(unittest.TestCase):
             self.assertEqual(checks['gh_account']['exit_code'], account)
             self.assertEqual(checks['git_repository']['exit_code'], git)
             self.assertEqual(checks['push_permission'], 'not_tested')
+            self.assertEqual(checks['git_read_available'], git == 0)
+            self.assertEqual(checks['gh_api_available'], account == 0)
 
     def test_raw_diagnostics_suppressed_and_noninteractive(self):
         for rc in (0, 128):

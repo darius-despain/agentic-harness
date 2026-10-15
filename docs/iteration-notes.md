@@ -186,3 +186,24 @@ uncommitted skill change as an explicit precommit smoke test; it found no
 actionable defects and verified resource resolution and workflow coverage. This demonstrates
 prompt delegation in this runtime; automatic skill discovery in a fresh Codex
 session and a review against a live external PR remain unverified.
+
+## Transcript-grounded PR review revision — October 15, 2026
+
+Original review messages are now available in this desktop session. See
+[the evidence map](pr-review-session-evidence.md) for exact chat/message IDs,
+observed requests, reported outcomes, and limitations. The earlier cloud-session
+statement above remains an accurate historical access limitation.
+
+Revised harness-pr-review and its portable reviewer to return explicit merge
+recommendations, verify earlier findings at new heads, inspect related PR paths
+when requested, distinguish CI scanning from behavior tests, and draft concise
+author comments. Added a mode reference; updated UI metadata and discovery docs.
+Domain examples inform investigation, not universal classification requirements.
+No consumer checkout or global installation is changed.
+
+Validation in this revision: all 33 existing regression tests passed; the skill
+validator, YAML/UI metadata, resource links, portable prompt paths, and whitespace
+checks passed. A dedicated independent reviewer inspected the working snapshot
+and found no actionable defects. Its hypothetical re-review assessment exercised
+instruction interpretation, not a live application review. Fresh-session discovery
+and execution against a new external PR remain unverified.

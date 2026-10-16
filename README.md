@@ -59,8 +59,11 @@ The repository includes project skills under `.agents/skills/`:
 | `harness-development-loop` | Implement, verify, diagnose failures, fix, and record the outcome. |
 | `harness-improvement-loop` | Read session evidence, identify gaps, improve the harness, validate, and record results. |
 | `harness-session-evidence` | Save sanitized journals and verify evidence when resuming work. |
+| `harness-handoff` | Distill relevant context, clarify the next objective, and save a brief with a kickoff prompt. |
 
 Copy these folders into the target project's `.agents/skills/`, preserving any existing skills. They are packaged here for later use; no global skill installation or scheduled run is performed. Each skill has a `SKILL.md` entrypoint and UI metadata.
+
+Ask “prepare a handoff for my next session” or invoke `$harness-handoff`. It saves a private project brief under ignored `.harness/handoffs/` and returns a copyable kickoff prompt. When the next objective is ambiguous, it offers recommendations and waits for your choice. It may commit isolated, validated work locally; pushing requires an explicit request.
 
 See [the skill inventory](docs/skill-inventory.md) for provenance and ideas that have not yet become skills.
 

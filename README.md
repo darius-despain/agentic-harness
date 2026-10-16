@@ -60,10 +60,13 @@ The repository includes project skills under `.agents/skills/`:
 | `harness-improvement-loop` | Read session evidence, identify gaps, improve the harness, validate, and record results. |
 | `harness-pr-review` | Review and re-review with an independent agent; recommend approve or request changes. |
 | `harness-session-evidence` | Save sanitized journals and verify evidence when resuming work. |
+| `harness-handoff` | Distill relevant context, clarify the next objective, and save a brief with a kickoff prompt. |
 
 Copy these folders into the target project's `.agents/skills/`, preserving any existing skills. They are packaged here for later use; no global skill installation or scheduled run is performed. Each skill has a `SKILL.md` entrypoint and UI metadata.
 
 Invoke with `$harness-pr-review review <PR URL>` or `$harness-pr-review review this branch against main`. The skill launches a sub-agent using its bundled [reviewer prompt](.agents/skills/harness-pr-review/agents/pr-reviewer.md); if delegation is unavailable it explicitly falls back to the current agent. No native agent registration or machine config change is required. Use “review again after these fixes” to verify earlier findings at the latest head, or “is this related finding still valid?” to trace linked PRs. Ask for a concise author comment for paste-ready feedback. Reviews remain local unless posting is requested. See the [skill entrypoint](.agents/skills/harness-pr-review/SKILL.md) for scope and evidence requirements.
+
+Ask “prepare a handoff for my next session” or invoke `$harness-handoff`. It saves a private project brief under ignored `.harness/handoffs/` and returns a copyable kickoff prompt. When the next objective is ambiguous, it offers recommendations and waits for your choice. It may commit isolated, validated work locally; pushing requires an explicit request.
 
 See [the skill inventory](docs/skill-inventory.md) for provenance and ideas that have not yet become skills.
 

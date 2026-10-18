@@ -44,6 +44,47 @@ class HarnessTests(unittest.TestCase):
         self.assertTrue(self.report()["findings"][0]["recurring"])
         self.assertIn("sessions.jsonl:1", [e["source"] for e in self.report()["findings"][0]["evidence"]])
 
+    def test_conversation_checkpoints_and_legacy_root_count_once(self):
+        self.write("checkpoints.jsonl", [self.record("chat"),
+                   self.record("chat-phase-1", conversation_id="chat"),
+                   self.record("chat-phase-2", conversation_id="chat")])
+        finding = self.report()["findings"][0]
+        self.assertEqual(finding["session_count"], 1)
+        self.assertFalse(finding["recurring"])
+        self.assertEqual(finding["evidence"][1]["session_id"], "chat-phase-1")
+        self.assertEqual(finding["evidence"][1]["conversation_id"], "chat")
+        self.write("second-chat.jsonl", [self.record("other-phase", conversation_id="other")])
+        self.assertTrue(self.report()["findings"][0]["recurring"])
+
+    def test_legacy_suffixes_are_not_heuristically_merged(self):
+        self.write("legacy.jsonl", [self.record("chat-phase-1"), self.record("chat-phase-2")])
+        self.assertEqual(self.report()["findings"][0]["session_count"], 2)
+
+    def test_invalid_conversation_identity_rejected_in_audit_and_log(self):
+        for index, value in enumerate((None, 123, "", "  ", " chat ")):
+            record = self.record(conversation_id=value)
+            self.write(f"bad-{index}.jsonl", [record])
+            record_path = self.root / "record.json"
+            record_path.write_text(json.dumps(record))
+            result = subprocess.run([sys.executable, str(SCRIPT), "--config", str(self.path),
+                                     "log", "--record", str(record_path)], capture_output=True)
+            self.assertEqual(result.returncode, 1)
+        self.assertEqual(len(self.report()["warnings"]), 5)
+        self.assertEqual(self.report()["findings"], [])
+        self.assertEqual(len(list((self.root / "conversations").glob("*.jsonl"))), 5)
+
+    def test_conversation_identity_roundtrip(self):
+        record = self.record("phase", conversation_id="chat", phase="validation")
+        record_path = self.root / "record.json"
+        record_path.write_text(json.dumps(record))
+        result = subprocess.run([sys.executable, str(SCRIPT), "--config", str(self.path),
+                                 "log", "--record", str(record_path)], check=True,
+                                capture_output=True, text=True)
+        saved = json.loads(Path(result.stdout.strip()).read_text())
+        self.assertEqual(saved["conversation_id"], "chat")
+        self.assertEqual(saved["session_id"], "phase")
+        self.assertEqual(saved["phase"], "validation")
+
     def test_generated_records_do_not_feed_back(self):
         self.write("sessions.jsonl", [self.record()])
         self.write("report.jsonl", [self.record("two", kind="audit"), self.record("three", agent_version="automation-v1")])

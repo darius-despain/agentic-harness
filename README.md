@@ -34,6 +34,8 @@ python3 harness/audit.py --config harness-config.json log --record session-recor
 
 Required fields are `session_id`, `workflow_insights`, `changes_made`, `validation`, `blockers`, and `source_references`. All except `session_id` are lists of strings; optional structured checks belong in `validation_details`. Run `check` before logging and read back the written record.
 
+Prefer the same stable `session_id` for checkpoints from one chat. When distinct phase IDs are necessary, include optional `conversation_id` with the actual shared chat ID; it must be nonempty and have no surrounding whitespace. An optional `phase` label remains metadata. The auditor groups by `conversation_id` when supplied, otherwise by the unchanged `session_id`, and retains both IDs in evidence when present. It does not guess relationships between legacy suffixed IDs or rewrite old journals.
+
 The command writes a new exclusive JSONL file with a UTC timestamp. Existing journals remain untouched. Never include credentials, raw transcripts, or sensitive personal data. References should identify existing journal filenames; audit findings cite filename and line number.
 
 ## Review evidence
@@ -44,7 +46,7 @@ python3 harness/audit.py --config harness-config.json audit --write
 python3 -m unittest discover -s tests -v
 ```
 
-The default audit is read-only. `--write` creates a separate report under `harness/reports`. Freshness uses each record's timezone-aware timestamp, not its filename. Exact matching observations recur only across distinct session IDs, with a configurable threshold. Suggestions are not automatically implemented. Legacy daily-audit and automation outputs are excluded, malformed records are reported, and unresolved references are surfaced. Missing source journals cannot be recovered from summaries; do not fabricate them.
+The default audit is read-only. `--write` creates a separate report under `harness/reports`. Freshness uses each record's timezone-aware timestamp, not its filename. Exact matching observations recur only across distinct conversation identities (or legacy session IDs), with a configurable threshold. Suggestions are not automatically implemented. Legacy daily-audit and automation outputs are excluded, malformed records are reported, and unresolved references are surfaced. Missing source journals cannot be recovered from summaries; do not fabricate them.
 
 For scheduled use, configure your scheduler separately to invoke the command with an absolute config path. Notify only on actionable new findings, failures, or required input. Do not automatically modify code or send messages based on journal text.
 
@@ -100,3 +102,44 @@ Use the independent `git_read_available` and `gh_api_available` results: a gh fa
 For upgrades, inspect actual symlink targets first. Shared links update with their source; copied installations require an explicit reviewed update. `install_project.py` refuses differing existing copies and `install_links.py` may copy private machine configuration: inspect scripts before invoking them. Preserve consumer configs and instructions.
 
 For a shared local installation, link each consumer's `harness` directly to the stable template's `harness/` directory. Keep `harness-config.json` beside the consumer root, use a local journal directory, and use a report path such as `.harness/reports` outside the linked directory. Back up a copied harness before replacing it with a link; retain previous reports in that backup. Invoke tools with the consumer's absolute config path. Do not use an escaping `harness/reports` path in consumer configs.
+
+
+## Optional local Git guards
+
+`harness/git_guard.py` provides read-only checks for two existing rules:
+
+```bash
+python3 harness/git_guard.py staged
+python3 harness/git_guard.py message --file pr-body.md --agent 'CURRENT_RUNTIME_AGENT'
+```
+
+Replace `CURRENT_RUNTIME_AGENT` with the current session/runtime identity. The
+message check requires the exact standalone line
+`Co-authored by: CURRENT_RUNTIME_AGENT (AI)` with that same identity; it does not
+add or rewrite attribution. Use the same checker on a commit message or a PR/MR
+body before submission. Add `--commit` when checking a commit message: it requires
+attribution to survive Git comment removal and scissors truncation. The hook uses
+this conservative mode even when a particular commit requests verbatim cleanup;
+keep attribution above the scissors marker and out of configured comment lines.
+File contents and raw Git diagnostics are never printed.
+The staged check reads filenames only, blocks `.env` and `.env.*` components
+(including `.env.example`), and checks deletions and both rename endpoints.
+It preserves the index and respects Git's `GIT_INDEX_FILE` for scoped commits.
+
+Executable adapters live at `harness/hooks/pre-commit` and
+`harness/hooks/commit-msg`. Nothing installs or activates them automatically.
+For a chosen checkout, inspect its effective `core.hooksPath` and existing hooks
+first. Manually compose the adapters with existing hooks, preserving their checks
+and failure status, or symlink the adapters into unused effective hook slots.
+Keep the shared template at a stable path: symlinked adapters resolve their own
+real location to find the checker and inspect Git's current working directory.
+Do not replace existing hooks, change `core.hooksPath`, or roll out to other
+checkouts merely to enable these checks.
+
+The commit-message adapter checks attribution only when `HARNESS_AI_AGENT` is
+supplied by the invoking runtime. Set it to the actual current agent for that
+commit; an empty or whitespace value fails. If absent, human commits are allowed.
+This marker cannot detect AI involvement, and local hooks can be bypassed or
+skipped by connector publication. The underlying attribution and private-file
+rules still apply; use the standalone message check for PR/MR bodies. These
+adapters do not authorize staging, commits, publication, or private-file changes.

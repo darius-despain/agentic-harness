@@ -54,6 +54,19 @@ Never use `assume-unchanged`, `skip-worktree`, index-only untracking, ignore rul
 
 For AI-assisted changes, append `Co-authored by: <active agent name> (AI)` to the commit message body and each pull request (PR) or merge request (MR) description. Resolve the name from the current session/runtime identity, not a fixed template value or Git author. Preserve existing attribution and verify the line is present before committing or submitting the PR/MR; do not invent an agent identity or email address.
 
+If `harness/git_guard.py` is available, run `python3 harness/git_guard.py staged`
+from the owning checkout and check a prepared message/body with
+`python3 harness/git_guard.py message --file MESSAGE_FILE --agent CURRENT_RUNTIME_AGENT`.
+Substitute the actual runtime identity and add `--commit` for a commit message
+so attribution must survive Git comment/scissors cleanup. The checks are read-only; private-path
+failures preserve the index for deliberate resolution. The optional adapters in
+`harness/hooks/` are not installed automatically. Preserve existing hooks and
+`core.hooksPath` when composing them; the commit-message adapter requires
+`HARNESS_AI_AGENT` to be supplied for AI commits and cannot infer AI involvement.
+An unset marker permits human commits, while a supplied empty marker fails.
+Hooks do not run for connector publication or guarantee PR/MR attribution; check
+those bodies explicitly. See [optional Git guard setup](../../../../README.md#optional-local-git-guards).
+
 Run relevant validation and inspect the intended diff with explicit safe paths. Stage explicit paths, then check the entire staged path list for pre-existing staged work before committing. If unrelated work is already staged, use a scoped commit that preserves it, or leave the commit pending with a concrete blocker; do not silently include or unstage it. Do not use broad staging that could capture private configuration, journals, or unrelated changes. Record the resulting local commit and branch.
 
 ## Publish and reconcile history

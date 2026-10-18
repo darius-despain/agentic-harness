@@ -37,6 +37,16 @@ def load_config(path):
     return config
 
 
+def conversation_identity(record):
+    """An explicit chat identity groups checkpoints; legacy session IDs stay intact."""
+    if "conversation_id" in record:
+        value = record["conversation_id"]
+        if not isinstance(value, str) or not value.strip() or value != value.strip():
+            raise ValueError("conversation_id must be a nonempty string without surrounding whitespace")
+        return value
+    return record["session_id"]
+
+
 def collect(config, now):
     root = config["session_persistence_dir"]
     if not root.is_dir():
@@ -63,6 +73,7 @@ def collect(config, now):
                     continue
                 date = timestamp(record["timestamp"])
                 session = record["session_id"]
+                identity = conversation_identity(record)
                 insights = record.get("workflow_insights", [])
                 if not isinstance(session, str) or not session.strip():
                     raise ValueError("session_id must be nonempty")
@@ -72,8 +83,11 @@ def collect(config, now):
                     continue
                 for insight in dict.fromkeys(i.strip() for i in insights if i.strip()):
                     entry = grouped[insight]
-                    entry["sessions"].add(session)
-                    entry["evidence"].append({"source": source, "session_id": session, "timestamp": record["timestamp"]})
+                    entry["sessions"].add(identity)
+                    evidence = {"source": source, "session_id": session, "timestamp": record["timestamp"]}
+                    if "conversation_id" in record:
+                        evidence["conversation_id"] = record["conversation_id"]
+                    entry["evidence"].append(evidence)
                 for reference in record.get("references_prior_sessions", []):
                     if not isinstance(reference, str) or not (root / reference).resolve().is_relative_to(root) or not (root / reference).is_file():
                         warnings.append(f"{source}: unresolved reference {reference!r}")
@@ -109,6 +123,7 @@ def main():
                 values = record.get(field, [] if field == "references_prior_sessions" else None)
                 if not isinstance(values, list) or any(not isinstance(v, str) for v in values):
                     raise ValueError(f"{field} must be a list of strings")
+            conversation_identity(record)
             record["timestamp"] = timestamp(record.get("timestamp", now.isoformat())).isoformat()
             record["kind"] = "session"
             record["project"] = config["project"]

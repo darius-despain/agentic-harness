@@ -160,3 +160,53 @@ checkpoint still requires a real context/credential change), paused consumer
 rebases, and application-specific startup/rate-limit fixes. The launcher-source
 selection issue in chat `01a13d93-2b6c-7f71-a1ae-7a079cf33834` was already
 resolved there through a local-filesystem fetch; it is not another auth failure.
+
+
+## Deterministic guards and conversation identity — October 15, 2026 (America/Denver)
+
+The explicit attribution preference comes from chat
+`01a13216-c091-7db2-bf31-405c249eaf09`, turn
+`01a13216-d5d7-71e1-b7f3-822dfc05b0f1`; the existing Git reference already
+specified the required line. This review found no executable check. Added a shared
+read-only checker and optional executable Git adapters for staged private filenames
+and exact runtime-supplied attribution. The private-path rule already exists in
+AGENTS.md and `git_preflight.private_path`; the new guard reuses that classification.
+This is enforcement of existing rules, not a claim of repeated attribution failures.
+No installer, hook activation, core.hooksPath change, or consumer rollout is included.
+
+MIQA session records
+`.harness/darius/sessions/2026-10-15-92100683a656445ca128d708bbe806e6.jsonl:1`
+and `.harness/darius/sessions/2026-10-15-7d09837e6fe74d3bbf948b5ac5e5a89d.jsonl:1`
+use suffixed IDs for one chat, `01a141f8-cb80-7893-bfb9-b6b5d771606a`.
+Their insights differ, so they do not demonstrate an existing false recurrence.
+A synthetic regression with matching insights showed the schema gap: distinct
+phase IDs counted twice. Optional validated `conversation_id` now groups explicit
+checkpoints, including a legacy root-ID record alongside new phase-ID records.
+Existing IDs and source evidence remain unchanged; unknown legacy relationships
+still require source review. No heuristic migration or historical rewriting occurs.
+
+The README command baseline correction comes from the same chat, turn
+`01a141f8-df42-7660-8bb6-2ac4f4c47d77`; follow-up chat
+`01a14268-af64-7af2-ae30-8baf699c1961`, turn
+`01a14268-bc9e-7a41-9a02-f859899e6cf3`, records a later correction.
+The development skill now reads the existing command sequence first when wrapping
+or automating it and identifies necessary deviations. This is a targeted semantic
+guidance change; it is not a repository-specific command hook. The improvement
+skill now connects source evidence, remaining gap, owner/scope, and the choice of
+a deterministic check versus semantic guidance.
+
+Validation: 47 automated tests passed, including real commits through symlinked
+hooks, human/AI/empty-identity cases, blocked private metadata with preserved index,
+both rename endpoints, and a scoped commit using Git's alternate index. Independent
+review reproduced attribution hidden below a scissors marker; the commit adapter
+now checks a conservative surviving message after Git comment/scissors cleanup.
+Real commit tests reject default/custom scissors and commentChar=C removal, then
+verify that an accepted attribution persists in Git history. Audit
+regressions cover explicit checkpoint deduplication, mixed legacy/new identities,
+invalid identity rejection, and unchanged suffix handling. Fixtures use synthetic
+Git metadata without opening working environment files. No commit, publication,
+network retry, scheduling, or global-link installation was performed. Shared source
+edits are visible through existing live links; consumer files were not edited.
+
+Deferred: hook activation in any checkout, connector/server enforcement, automatic
+chat capture, legacy ID migration, credential repair, and history reconciliation.

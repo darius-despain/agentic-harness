@@ -8,6 +8,7 @@ The original template contained no SKILL.md files. The inspected project and sha
 | --- | --- | --- |
 | harness-development-loop | User request in this chat to preserve an implement/test/fix/verify development loop; recent setup and Git sessions informed failure handling. | New reusable skill, ready for later use; no development run started. |
 | harness-improvement-loop | Garmin project harness/automation-prompt.md and the matching automation-project copy. | Captured and adapted: config-relative paths, independent evidence, separate reports, no assumed scheduler or callback. |
+| harness-pr-review | Original PR-review chats inspected on 2026-10-15; see docs/pr-review-session-evidence.md for message IDs and limits. | Dedicated reviewer plus initial, adversarial, re-review, related-PR and concise-comment modes; explicit merge recommendation and delegation fallback. |
 | harness-session-evidence | Original template audit_policy, Garmin conversations/AUDIT-README.md, and the implemented harness/audit.py. | Captured as a focused skill for persistence and handoff. |
 | harness-handoff | User-confirmed design in chat `01a14202-847f-7691-a056-c9db90c63471`, informed by recent startup, report-verification, and harness-publication chats. | New brief and kickoff-prompt workflow; see [design evidence](handoff-skill-design.md). |
 

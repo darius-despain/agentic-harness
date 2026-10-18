@@ -21,10 +21,11 @@ For AI-assisted changes, include `Co-authored by: <active agent name> (AI)` in e
 
 ## Packaged skills
 
-Use the relevant local skill when it applies; do not load all three for every task.
+Use the relevant local skill when it applies; do not load all skills for every task.
 
 - Software implementation and repair: `~/.agents/skills/harness-development-loop/SKILL.md`.
 - Explicit harness/workflow improvement: `~/.agents/skills/harness-improvement-loop/SKILL.md`.
+- PR or branch review: `.agents/skills/harness-pr-review/SKILL.md` (or the linked global skill).
 - Saving or inspecting session journals: `~/.agents/skills/harness-session-evidence/SKILL.md`.
 
 Skill use does not authorize deployment, publication, scheduling, or edits to unrelated projects.

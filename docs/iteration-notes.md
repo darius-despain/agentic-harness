@@ -210,3 +210,69 @@ edits are visible through existing live links; consumer files were not edited.
 
 Deferred: hook activation in any checkout, connector/server enforcement, automatic
 chat capture, legacy ID migration, credential repair, and history reconciliation.
+
+## PR review skill and agent — October 15, 2026 (UTC)
+
+The user explicitly requested a PR review skill that runs an agent, saved in the
+harness template repo. This cloud workspace had no attached prior-chat search
+capability, local session archive, project config, or original cited journals.
+The initial journal audit reported a missing session directory. Existing notes
+in this file are secondary evidence, not newly inspected original sessions.
+In particular, lines 95–117 report connector/Git and history differences, and
+lines 133–156 report restricted-file and validation limits. These informed
+review scoping and honest coverage reporting; they do not establish recurring
+PR-review failures. The new workflow implements the user's requested capability.
+
+Added `harness-pr-review` with a portable dedicated-agent prompt, a review
+contract, and UI metadata. It resolves immutable revisions, limits secret reads,
+launches one reviewer through available delegation, verifies findings, and
+rechecks the head. Delegation fallback is explicit. Posting, fixes, approval,
+and merge require their own user request. Updated discovery and usage docs.
+No global configuration, consumer checkout, or native agent registration changed.
+
+Validation: all 33 existing regression tests passed; skill YAML/frontmatter and
+referenced-resource checks passed. A dedicated reviewer was launched against the
+uncommitted skill change as an explicit precommit smoke test; it found no
+actionable defects and verified resource resolution and workflow coverage. This demonstrates
+prompt delegation in this runtime; automatic skill discovery in a fresh Codex
+session and a review against a live external PR remain unverified.
+
+## Transcript-grounded PR review revision — October 15, 2026
+
+Original review messages are now available in this desktop session. See
+[the evidence map](pr-review-session-evidence.md) for exact chat/message IDs,
+observed requests, reported outcomes, and limitations. The earlier cloud-session
+statement above remains an accurate historical access limitation.
+
+Revised harness-pr-review and its portable reviewer to return explicit merge
+recommendations, verify earlier findings at new heads, inspect related PR paths
+when requested, distinguish CI scanning from behavior tests, and draft concise
+author comments. Added a mode reference; updated UI metadata and discovery docs.
+Domain examples inform investigation, not universal classification requirements.
+No consumer checkout or global installation is changed.
+
+Validation in this revision: all 33 existing regression tests passed; the skill
+validator, YAML/UI metadata, resource links, portable prompt paths, and whitespace
+checks passed. A dedicated independent reviewer inspected the working snapshot
+and found no actionable defects. Its hypothetical re-review assessment exercised
+instruction interpretation, not a live application review. Fresh-session discovery
+and execution against a new external PR remain unverified.
+
+
+## Publication finalization — October 18, 2026 (America/Denver)
+
+Chat `01a15001-4d58-7a70-9e97-f3a78bcf666a` reviewed the prior completion report
+`harness/reports/improvement-2026-10-18-01a14298.md` and actual source. An independent
+subagent found no actionable implementation defect and recommended publication;
+a second review of the combined merge found both sets of additions preserved.
+The approved host executor passed configured Git and gh readiness; fetching
+revealed the earlier divergent local/connector histories and remote PR-review
+additions. A normal merge retains both histories instead of replaying already
+published work. All 47 tests and all five packaged skill validators pass on the
+combined result; staged-path and whitespace checks pass.
+
+MIQA and Garmin's active harness links resolve directly to this shared source;
+both project-local configuration checks pass. Existing global harness skill,
+CLI and instruction links also resolve here. Added only the absent global
+PR-review skill link. No private configuration or hooks were changed. Publication
+and final remote equality are verified separately in the session completion record.

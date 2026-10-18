@@ -1,0 +1,4 @@
+interface:
+  display_name: "Harness PR Review"
+  short_description: "Review, re-review, and recommend approve or request changes"
+  default_prompt: "Use $harness-pr-review to launch an independent reviewer for this PR, verify findings and any prior fixes, and recommend approve or request changes."

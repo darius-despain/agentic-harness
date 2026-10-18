@@ -25,6 +25,7 @@ Read the underlying records needed to assess a candidate improvement. If the use
 - Compare an observed workflow failure with the current implementation to see whether it remains unresolved.
 - Repetition means independent sessions, not duplicate records or reports quoting prior reports. The CLI's exact-string groups are a starting point; inspect sources before combining semantically related observations.
 - A demonstrated failure can justify a targeted fix from one session. Label broader patterns as recurring only when independent sources support that claim.
+- For each candidate, connect the source evidence to a remaining implementation gap and the owning project or shared skill. Prefer a deterministic checker or opt-in hook for mechanically testable rules; use skill guidance for semantic decisions. Hooks do not grant new permissions or prove enforcement on other execution paths.
 - Select concrete improvements within the requested scope. Prefer updating an existing skill or tool over adding another overlapping artifact. Record deferred proposals separately from implemented changes.
 - If no actionable gap remains, make no implementation change and state why. A missing archive is a blocker to stronger conclusions, not evidence for a speculative skill.
 

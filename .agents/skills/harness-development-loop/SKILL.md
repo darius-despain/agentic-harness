@@ -11,6 +11,8 @@ Carry the user's requested behavior to a verified result. Keep the loop scoped t
 
 Read applicable project instructions, inspect the actual checkout and existing changes, and identify the acceptance condition from the request. Consult relevant recent session evidence for unresolved blockers and prior verification; confirm it against current files before relying on it. Use the project's existing tooling and tests.
 
+When asked to wrap or automate an existing documented command sequence, read that sequence first and use it as the baseline. Identify any necessary deviation and its reason before substituting commands; verify the resulting behavior against the user's requested sequence.
+
 If a requirement is unclear, proceed with independent work and ask only for information that materially affects the result. Keep the original objective when a later message adds constraints or asks for status.
 
 For branch changes, commits, pushes, connector publication, or checkout cleanup, read [the Git workflow](references/git-workflow.md). Use it to preserve existing work and distinguish local commits, remote publication, and a synchronized handoff.

@@ -17,7 +17,8 @@ If configuration or source records are absent, say what is missing. Configure pe
 
 Prepare a temporary JSON object containing:
 
-- `session_id`: the actual chat ID or a stable unique ID for this work session.
+- `session_id`: the actual chat ID or a stable unique ID for this work session. Reuse it for checkpoints from the same chat.
+- Optional `conversation_id`: the actual shared chat ID when distinct phase IDs are needed; nonempty with no surrounding whitespace. The auditor groups by this value, otherwise by `session_id`. Keep phase labels in optional `phase` metadata; do not infer or strip legacy ID suffixes.
 - `workflow_insights`: directly observed lessons from this session; exclude inherited proposals and generated report text.
 - `changes_made`: actual edits or actions, with affected paths.
 - `validation`: a list of strings describing performed checks and results, including failures or unverified flows.

@@ -1,16 +1,60 @@
 # Portable agentic harness
 
-A project-local session journal and evidence audit using Python 3.9+ and no external packages. Logging is explicit: installing the template does not capture chats or schedule a daily agent.
+A shared toolkit for working with a coding agent: implement and verify changes, review PRs, preserve session context, and improve workflows from recorded evidence. MIQA teammates can clone this whole repository and use it with their own checkouts, credentials, and project configuration.
 
-## Setup
+Skills describe how the agent should approach a task. Python scripts perform specific checks, installation, logging, and auditing. `AGENTS.md` supplies shared working rules. The Python tools require Python 3.9+ with no external packages; Git checks require Git, and GitHub CLI readiness additionally requires `gh`. The skill packaging and global installer target Codex; other agents may need their own skill-loading setup.
 
-Copy `harness/`, `.agents/skills/`, `AGENTS.md`, and `harness-config-template.json` into your project (merge existing agent instructions rather than replacing them). Copy the config to `harness-config.json` beside the project root, set `project`, and run:
+## Find your way around
+
+| Path | What it is / when to open it |
+| --- | --- |
+| [`.agents/skills/`](.agents/skills/) | Five workflows. Start with a skill's `SKILL.md` for its purpose, example requests, and procedure. |
+| [`AGENTS.md`](AGENTS.md) | Shared agent instructions, including Git and credential handling. Merge with the target project's existing rules. |
+| [`harness/`](harness/) | Executable tools: `audit.py` logs/audits; `install_project.py` installs the logger; `git_preflight.py` inspects Git readiness; `git_guard.py` checks staging and attribution. |
+| [`harness/hooks/`](harness/hooks/) | Optional Git hook adapters; inspect existing hooks before enabling them. |
+| [`harness-config-template.json`](harness-config-template.json) | Starting configuration for a project. The actual `harness-config.json` is local and ignored. |
+| [`docs/project-setup.md`](docs/project-setup.md) | Detailed logger installation, preservation rules, and migration behavior. |
+| [`docs/skill-inventory.md`](docs/skill-inventory.md), [`docs/iteration-notes.md`](docs/iteration-notes.md) | Provenance and rationale. Historical evidence, rather than setup instructions for a new teammate. |
+| [`tests/`](tests/) | Regression coverage for the Python tools. Run `python3 -m unittest discover -s tests -v` from this checkout. |
+| [`GUARDRAIL.md`](GUARDRAIL.md) | Original workspace policy retained for context; its personal absolute paths need adaptation before reuse. |
+
+Each skill's `agents/openai.yaml` contains UI metadata. Review-specific references and the independent reviewer prompt live inside `harness-pr-review/`; the detailed Git procedure lives inside `harness-development-loop/references/`.
+
+Local use creates private artifacts: `conversations/` holds sanitized session journals, `harness/reports/` holds generated audits by default, and `.harness/handoffs/` holds next-session briefs. These directories and personal `codex/config.local.toml` are ignored here. They do not travel with a normal clone. Each teammate supplies their own configuration and authentication; cloning this repo does not grant MIQA repository access.
+
+## How the workflows fit together
+
+A typical change starts with **development**, which implements the requested behavior and checks it. Ask for **PR review** when a branch or PR is ready; if it finds defects, return to development and then request a re-review. **Session evidence** records actual changes, checks, and blockers along the way. When pausing, ask for a **handoff** with a chosen next objective; the next chat reads the brief and rechecks the current state before continuing.
+
+Run **improvement** when you want to examine recorded workflow friction and make evidence-supported changes to the harness. It is a separate task from developing a product feature. A useful first session is one real bug fix, a review of that fix, and a handoff for the next step; journaling becomes more useful as sessions accumulate.
+
+These workflows are invoked by a user or agent in a session. Installing the repository does not capture chats, schedule jobs, activate hooks, or publish reviews. The logger and auditor work without an agent; an audit groups observations for inspection and does not implement its suggestions.
+
+## Start from the shared repository
+
+Clone the whole repository into a stable location using your normal Git access, then work from its root:
+
+```bash
+git clone https://github.com/darius-despain/agentic-harness.git
+cd agentic-harness
+```
+
+Keep this clone as the source for skills, scripts, documentation, and future updates. The target project is your own MIQA checkout; it is separate from this harness checkout. Choose how to make the workflows available:
+
+- **Project-local setup:** copy the skill folders into your target project's `.agents/skills/`, copy `harness/`, and merge `AGENTS.md` with existing instructions. Preserve existing files and review differences before replacing any copies. Copy `harness-config-template.json` to the target root as `harness-config.json`, set `project`, and add the supplied ignore patterns to that project's `.gitignore`. This makes the workflows available for that project without changing global settings.
+- **Global setup:** use the [global link installation](#live-global-installation-with-symlinks) below after inspecting what it replaces. Skills and instructions remain linked to this clone; every consumer project still needs its own configuration and journal setup.
+
+For a project-local setup, run this from the target project's root:
 
 ```bash
 python3 harness/audit.py --config harness-config.json check
 ```
 
-Paths are relative to the config file. Absolute paths, parent traversal, and symlinks escaping the project are rejected. Session journals and generated reports stay separate. Add the supplied ignore patterns to your project's `.gitignore`; private session logs and machine-specific config should not be committed.
+Paths are relative to the config file. Absolute data paths, parent traversal, and symlinks escaping the project are rejected. Session journals and generated reports stay separate. Do not commit private session logs or machine-specific configuration.
+
+If you only need to install the logger/config, use the preview/apply commands in [project setup](docs/project-setup.md). That installer copies `audit.py`; it does not install the skills, shared instructions, Git preflight, or guards. Those require the setup above. Existing copies do not update when this clone changes; compare and merge upgrades explicitly. Linked installations use the source directly.
+
+Once skills are available in your agent session, invoke them with the examples below and give the target checkout path when it is not already clear. If the skill is not available, check its installation and session loading before relying on it.
 
 ## Save a session
 
@@ -56,13 +100,13 @@ See `docs/iteration-notes.md` for evidence behind this revision and `GUARDRAIL.m
 
 The repository includes project skills under `.agents/skills/`:
 
-| Skill | Purpose |
-| --- | --- |
-| `harness-development-loop` | Implement, verify, diagnose failures, fix, and record the outcome. |
-| `harness-improvement-loop` | Read session evidence, identify gaps, improve the harness, validate, and record results. |
-| `harness-pr-review` | Review and re-review with an independent agent; recommend approve or request changes. |
-| `harness-session-evidence` | Save sanitized journals and verify evidence when resuming work. |
-| `harness-handoff` | Distill relevant context, clarify the next objective, and save a brief with a kickoff prompt. |
+| Skill | Example request | Expected result |
+| --- | --- | --- |
+| [Development](.agents/skills/harness-development-loop/SKILL.md) | `$harness-development-loop fix this bug in my checkout: <behavior and expected outcome>` | A scoped change, relevant verification, and explicit remaining blockers. |
+| [PR review](.agents/skills/harness-pr-review/SKILL.md) | `$harness-pr-review review <PR URL>` or `review this branch against main` | A merge recommendation with verified findings and validation limits. |
+| [Session evidence](.agents/skills/harness-session-evidence/SKILL.md) | `$harness-session-evidence save what changed, what passed, and what remains blocked in this session` | A sanitized journal record whose saved contents are verified. |
+| [Handoff](.agents/skills/harness-handoff/SKILL.md) | `$harness-handoff prepare the next session to finish <objective>` | A private brief and copyable kickoff prompt. |
+| [Improvement](.agents/skills/harness-improvement-loop/SKILL.md) | `$harness-improvement-loop inspect this project's session evidence and address supported workflow gaps in this harness checkout` | Evidence-backed changes and validation, or an explanation that no actionable gap remains. |
 
 Copy these folders into the target project's `.agents/skills/`, preserving any existing skills. They are packaged here for later use; no global skill installation or scheduled run is performed. Each skill has a `SKILL.md` entrypoint and UI metadata.
 
@@ -74,7 +118,16 @@ See [the skill inventory](docs/skill-inventory.md) for provenance and ideas that
 
 ## Live global installation with symlinks
 
-Run `python3 harness/install_links.py` from this checkout. It links `~/.codex/AGENTS.md` and each packaged harness skill under `~/.agents/skills/` to this repository. Global instructions and skills apply across repositories; project instructions can add or override guidance. Restart Codex after installation or changes to configuration and skills.
+This is an opt-in change to your global Codex setup. Inspect `harness/install_links.py` first: it backs up and replaces existing global instructions and same-named skill paths with links, and links your personal Codex configuration into this checkout. It does not merge the previous instructions into the new ones. Preserve any rules you still need and keep this clone at a stable path.
+
+On a fresh clone, create the ignored configuration directory before invoking the current installer; it does not create that parent itself:
+
+```bash
+mkdir -p codex
+python3 harness/install_links.py
+```
+
+Run these commands from this checkout. It links `~/.codex/AGENTS.md` and each packaged harness skill under `~/.agents/skills/` to this repository. Global instructions and skills apply across repositories; project instructions can add or override guidance. Restart Codex after installation or changes to configuration and skills.
 
 The installer also links the harness CLI directory at `~/.local/share/agentic-harness/harness`. Run it with an explicit project config, for example:
 

@@ -7,6 +7,10 @@ description: Save or inspect sanitized project session journals for cross-sessio
 
 Keep a concise record of what happened and what was verified, sufficient for another session to continue. Use the project's configured journal; do not create a global archive or copy raw chat histories by default.
 
+## When to use it
+
+Use to preserve the outcome of a work session or recover the evidence needed to resume. For example: `$harness-session-evidence save this session's changes, actual checks, and blockers for /absolute/path/to/project`, or `read the relevant journal records before we resume the failed setup`. Saving produces a sanitized record in the configured project journal and verifies it was written. Reading produces a source-backed account with current-state checks where needed. For a next-session objective and kickoff prompt, use the handoff skill; for workflow changes across records, use the improvement skill.
+
 ## Inspect existing evidence
 
 Find `harness-config.json` in the intended project and use the supplied CLI's `check` command to resolve paths. Read relevant records and their referenced sources. A report or summary establishes what was reported, not that the underlying operation succeeded. Verify current filesystem and runtime state when resuming work.

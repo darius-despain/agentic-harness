@@ -7,6 +7,10 @@ description: Iterate on a software change through implementation, focused verifi
 
 Carry the user's requested behavior to a verified result. Keep the loop scoped to that behavior; a passing syntax check or running server alone is not completion.
 
+## When to use it
+
+Use for a feature, bug fix, or continuation with a concrete expected behavior. For example: `$harness-development-loop fix the filter reset bug in /absolute/path/to/checkout; resetting should restore all results.` Supply reproduction steps and acceptance criteria when available. The result is a scoped implementation, checks actually performed, and remaining blockers; a configured journal records the outcome. Ask for PR review separately when the change is ready.
+
 ## Establish the target
 
 Read applicable project instructions, inspect the actual checkout and existing changes, and identify the acceptance condition from the request. Consult relevant recent session evidence for unresolved blockers and prior verification; confirm it against current files before relying on it. Use the project's existing tooling and tests.

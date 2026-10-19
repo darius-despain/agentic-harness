@@ -7,6 +7,10 @@ description: Review session evidence and iterate on harness skills, instructions
 
 Adapt the earlier daily improvement cycle into a portable, evidence-driven review. This skill runs a cycle when invoked; it does not create a schedule or grant permission to modify other projects.
 
+## When to use it
+
+Use when the requested work is improving the harness from observed workflow friction. For example: `$harness-improvement-loop inspect the session evidence in /absolute/path/to/project and fix supported gaps in /absolute/path/to/harness-checkout`. Identify both the evidence project and the editable harness when they differ. The result connects each implemented or deferred change to source evidence, validates actual edits, and records this run; no supported gap can also be a valid result. A request to save one session belongs to session evidence, and a product bug belongs to development.
+
 ## Read and audit
 
 Locate the requested harness checkout and the target project's `harness-config.json`; inspect current instructions, status, and origin. Use config-relative paths, not paths remembered from previous sessions.

@@ -7,6 +7,10 @@ description: Prepare a project handoff and next-session kickoff prompt when aske
 
 Produce a durable project brief and a short, copyable prompt that tells the next session what to accomplish and where to start. Natural-language requests count; a slash or dollar invocation is unnecessary. Do not trigger merely because a task finishes.
 
+## When to use it
+
+Use when pausing work and preparing a new chat to continue toward a particular outcome. For example: `$harness-handoff prepare the next session to finish the filter fix in /absolute/path/to/checkout, starting with the failing integration check`. Supply the next objective if known; otherwise resolve it with the user before finalizing. The result is a verified private brief under `.harness/handoffs/` and a copyable kickoff prompt. The user brings that prompt to the next chat; this workflow does not start or message it automatically.
+
 ## Gather relevant context
 
 Start with the current conversation and the user's latest stated objective. Inspect the actual project root, applicable instructions, repository ownership, branch, status, and origin. Preserve pre-existing work. When `harness-config.json` exists, resolve paths relative to it and run its harness `check` command before inspecting or writing configured records.

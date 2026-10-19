@@ -7,6 +7,10 @@ description: Review a PR or branch with a dedicated agent and give an approve or
 
 Give the user a clear merge recommendation supported by verified defects and explicit validation limits. Review requests authorize analysis and a recommendation; posting, source/test edits, approval submission, merge, and deployment need their own user authorization. Honor authorization already given in the conversation.
 
+## When to use it
+
+Use when a PR or local branch is ready for a merge decision. For example: `$harness-pr-review review <PR URL>` or `$harness-pr-review review this branch against main in /absolute/path/to/checkout`. For a re-review, provide the earlier findings or review context and ask `review again after these fixes`. The result is a recommendation with verified findings, the reviewed revision, and validation limits; request posting separately if desired. Return confirmed defects to development, then re-review the new head.
+
 ## Resolve the review
 
 Read applicable repository instructions and inspect the actual checkout, origin, branch, status, and submodules. Preserve existing work. Resolve the PR URL or local base/head from the conversation; ask only when the target is ambiguous. Follow the sibling development skill's Git procedure and configured readiness before network Git work. Read prior access checkpoints; do not repeat unchanged authentication failures. Connector access is independent of local Git access, so continue through an available authorized read route.

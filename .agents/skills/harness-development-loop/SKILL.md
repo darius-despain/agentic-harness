@@ -5,32 +5,27 @@ description: Iterate on a software change through implementation, focused verifi
 
 # Development loop
 
-Carry the user's requested behavior to a verified result. Keep the loop scoped to that behavior; a passing syntax check or running server alone is not completion.
-
 ## When to use it
 
-Use for a feature, bug fix, or continuation with a concrete expected behavior. For example: `$harness-development-loop fix the filter reset bug in /absolute/path/to/checkout; resetting should restore all results.` Supply reproduction steps and acceptance criteria when available. The result is a scoped implementation, checks actually performed, and remaining blockers; a configured journal records the outcome. Ask for PR review separately when the change is ready.
+- Implement/fix/continue concrete requested behavior. Output: scoped changes, actual verification, blockers, configured journal. PR review is a separate request.
 
 ## Establish the target
 
-Read applicable project instructions, inspect the actual checkout and existing changes, and identify the acceptance condition from the request. Consult relevant recent session evidence for unresolved blockers and prior verification; confirm it against current files before relying on it. Use the project's existing tooling and tests.
-
-When asked to wrap or automate an existing documented command sequence, read that sequence first and use it as the baseline. Identify any necessary deviation and its reason before substituting commands; verify the resulting behavior against the user's requested sequence.
-
-If a requirement is unclear, proceed with independent work and ask only for information that materially affects the result. Keep the original objective when a later message adds constraints or asks for status.
-
-For branch changes, commits, pushes, connector publication, or checkout cleanup, read [the Git workflow](references/git-workflow.md). Use it to preserve existing work and distinguish local commits, remote publication, and a synchronized handoff.
+- Inspect actual checkout, applicable instructions/status/origin and relevant recent evidence; confirm historical claims against current state. Preserve existing work; use project tooling/tests.
+- Establish acceptance criteria. For wrappers/automation, read the documented command sequence first; explain necessary deviations and verify against the requested sequence.
+- Ask only for material missing information while continuing independent work. Later constraints/status questions retain the original objective.
+- Before branches, commits, pushes, connector publication, or cleanup, read [Git workflow](references/git-workflow.md).
 
 ## Implement, verify, diagnose, repeat
 
-1. Make the smallest coherent change that satisfies the target. Preserve unrelated work. Inspect setup commands for destructive side effects before executing them.
-2. Run focused verification appropriate to the changed behavior. For a regression, reproduce the failure and add a meaningful test when warranted. For a UI or integration flow, exercise the relevant interaction when tools and credentials permit; report the limit if it cannot be exercised.
-3. If verification fails, classify the cause: changed code, pre-existing behavior, environment, credentials, or an external dependency. Use the failure output to choose the next action. Change one coherent cause and rerun the affected checks.
-4. Repeat while the next step makes progress within the authorized scope. After the same unchanged blocker recurs, do not retry it blindly: complete independent work and identify the specific input or external change needed. Never loosen the acceptance condition merely to get a green check.
-5. After relevant checks pass, inspect the final diff for accidental scope and complete required project checks. Broaden tests only when the change or remaining uncertainty justifies it.
+1. Make the smallest coherent change; inspect setup for destructive effects.
+2. Run focused behavioral checks; reproduce regressions and add meaningful tests when warranted. Exercise UI/integration interactions when access permits; report unverified flows.
+3. Classify failures: changed code, existing behavior, environment, credentials, external dependency. Fix one coherent cause; rerun affected checks.
+4. Continue authorized progress; do not repeat unchanged blockers or weaken acceptance criteria. Finish independent work and identify the required external change.
+5. Inspect the final diff and run required project checks. Broaden/repeat tests only for new changes, failures, or unresolved uncertainty.
 
 ## Close the loop
 
-Report the resulting behavior, checks actually performed, and any remaining blocker. Distinguish syntax checks, tests, service health, and user-flow verification. Save a sanitized session record when the project harness is configured; use the sibling `harness-session-evidence` skill if available, otherwise follow the project's logging instructions. Include changed files and validation outcomes so a later session can resume accurately.
-
-Commit, publish, deploy, or message another person only within the user's authorization. Do not start a scheduler or a harness self-improvement run merely because development finished; record useful observations for a later improvement cycle.
+- Report resulting behavior, actual checks/blockers; distinguish syntax, tests, health, and user flows.
+- Save/verify a sanitized configured journal via the sibling session-evidence skill or project logging instructions.
+- Commit/publish/deploy/message only within user authorization. Completion does not trigger scheduling or self-improvement.

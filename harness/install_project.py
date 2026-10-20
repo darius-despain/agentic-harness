@@ -9,6 +9,16 @@ import sys
 from audit import load_config
 
 
+def ignore_directory(path):
+    """Return an anchored gitignore rule matching this literal relative path."""
+    value = path.as_posix()
+    if '\n' in value or '\r' in value:
+        raise ValueError('journal/report paths cannot contain line breaks in gitignore rules')
+    # Git wildmatch treats these characters as pattern syntax, including backslash.
+    escaped = ''.join('\\' + char if char in '\\*?[]' else char for char in value)
+    return '/' + escaped + '/'
+
+
 def install(root, project, apply=False):
     root = root.expanduser().resolve(strict=True)
     if not root.is_dir():
@@ -51,7 +61,7 @@ def install(root, project, apply=False):
         raise ValueError('existing harness/audit.py differs; review and update it explicitly')
     ignore_path = root / '.gitignore'
     ignore = ignore_path.read_text() if ignore_path.exists() else ''
-    patterns = ['/' + config[key].relative_to(root).as_posix() + '/'
+    patterns = [ignore_directory(config[key].relative_to(root))
                 for key in ('session_persistence_dir', 'audit_output_dir')]
     # Config remains local; journals and reports are never staged by this installer.
     patterns.append('/harness-config.json')

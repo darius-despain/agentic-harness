@@ -49,6 +49,40 @@ class ProjectInstallTests(unittest.TestCase):
         self.run_install()
         self.assertEqual(path.read_bytes(),original)
 
+    def test_literal_gitignore_paths(self):
+        subprocess.run(['git', 'init', '-q', str(self.root)], check=True)
+        self.run_install()
+        config_path = self.root / 'harness-config.json'
+        config = json.loads(config_path.read_text())
+        paths = ('notes[private]', 'reports*?\\literal')
+        config.update(session_persistence_dir=paths[0], audit_output_dir=paths[1])
+        config_path.write_text(json.dumps(config))
+        self.run_install()
+        for directory in paths:
+            result = subprocess.run(['git', '-C', str(self.root), 'check-ignore',
+                                     '--quiet', '--', directory + '/entry.jsonl'])
+            self.assertEqual(result.returncode, 0, directory)
+        for sibling in ('notesp', 'reportsXXliteral', 'notesprivate'):
+            result = subprocess.run(['git', '-C', str(self.root), 'check-ignore',
+                                     '--quiet', '--', sibling + '/entry.jsonl'])
+            self.assertEqual(result.returncode, 1, sibling)
+        self.assertEqual(json.loads(self.run_install().stdout)['changes'], [])
+
+    def test_line_break_paths_fail_without_changes(self):
+        self.run_install()
+        config_path = self.root / 'harness-config.json'
+        config = json.loads(config_path.read_text())
+        for line_break in ('\n', '\r'):
+            with self.subTest(line_break=repr(line_break)):
+                config['session_persistence_dir'] = 'notes' + line_break + 'private'
+                config_path.write_text(json.dumps(config))
+                before = {str(p.relative_to(self.root)): p.read_bytes()
+                          for p in self.root.rglob('*') if p.is_file()}
+                self.run_install(success=False)
+                self.assertEqual(before, {str(p.relative_to(self.root)): p.read_bytes()
+                                         for p in self.root.rglob('*') if p.is_file()})
+                self.assertFalse((self.root / config['session_persistence_dir']).exists())
+
     def test_conflicting_cli_fails_without_changes(self):
         (self.root/'harness').mkdir()
         (self.root/'harness/audit.py').write_text('existing user code')

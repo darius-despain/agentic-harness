@@ -1,0 +1,9 @@
+#!/usr/bin/env python3
+"""Optional Git adapter; resolve shared code through this adapter's real path."""
+from pathlib import Path
+import sys
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from git_guard import main
+
+sys.exit(main(["staged"]))

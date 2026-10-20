@@ -27,7 +27,7 @@ class HarnessTests(unittest.TestCase):
 
     def record(self, session="one", **extra):
         return dict(timestamp="2026-10-05T12:00:00Z", session_id=session,
-                    workflow_insights=["Use config paths"], **extra)
+                    workflow_insights=["Use config paths"], changes_made=[], validation=[], blockers=[], source_references=[], **extra)
 
     def write(self, name, records):
         (self.root / "conversations" / name).write_text("\n".join(json.dumps(r) for r in records))
@@ -43,6 +43,47 @@ class HarnessTests(unittest.TestCase):
         self.write("second.jsonl", [self.record("two")])
         self.assertTrue(self.report()["findings"][0]["recurring"])
         self.assertIn("sessions.jsonl:1", [e["source"] for e in self.report()["findings"][0]["evidence"]])
+
+    def test_conversation_checkpoints_and_legacy_root_count_once(self):
+        self.write("checkpoints.jsonl", [self.record("chat"),
+                   self.record("chat-phase-1", conversation_id="chat"),
+                   self.record("chat-phase-2", conversation_id="chat")])
+        finding = self.report()["findings"][0]
+        self.assertEqual(finding["session_count"], 1)
+        self.assertFalse(finding["recurring"])
+        self.assertEqual(finding["evidence"][1]["session_id"], "chat-phase-1")
+        self.assertEqual(finding["evidence"][1]["conversation_id"], "chat")
+        self.write("second-chat.jsonl", [self.record("other-phase", conversation_id="other")])
+        self.assertTrue(self.report()["findings"][0]["recurring"])
+
+    def test_legacy_suffixes_are_not_heuristically_merged(self):
+        self.write("legacy.jsonl", [self.record("chat-phase-1"), self.record("chat-phase-2")])
+        self.assertEqual(self.report()["findings"][0]["session_count"], 2)
+
+    def test_invalid_conversation_identity_rejected_in_audit_and_log(self):
+        for index, value in enumerate((None, 123, "", "  ", " chat ")):
+            record = self.record(conversation_id=value)
+            self.write(f"bad-{index}.jsonl", [record])
+            record_path = self.root / "record.json"
+            record_path.write_text(json.dumps(record))
+            result = subprocess.run([sys.executable, str(SCRIPT), "--config", str(self.path),
+                                     "log", "--record", str(record_path)], capture_output=True)
+            self.assertEqual(result.returncode, 1)
+        self.assertEqual(len(self.report()["warnings"]), 5)
+        self.assertEqual(self.report()["findings"], [])
+        self.assertEqual(len(list((self.root / "conversations").glob("*.jsonl"))), 5)
+
+    def test_conversation_identity_roundtrip(self):
+        record = self.record("phase", conversation_id="chat", phase="validation")
+        record_path = self.root / "record.json"
+        record_path.write_text(json.dumps(record))
+        result = subprocess.run([sys.executable, str(SCRIPT), "--config", str(self.path),
+                                 "log", "--record", str(record_path)], check=True,
+                                capture_output=True, text=True)
+        saved = json.loads(Path(result.stdout.strip()).read_text())
+        self.assertEqual(saved["conversation_id"], "chat")
+        self.assertEqual(saved["session_id"], "phase")
+        self.assertEqual(saved["phase"], "validation")
 
     def test_generated_records_do_not_feed_back(self):
         self.write("sessions.jsonl", [self.record()])
@@ -84,6 +125,17 @@ class HarnessTests(unittest.TestCase):
         self.path.write_text(json.dumps(self.config))
         with self.assertRaises(ValueError):
             self.report()
+
+    def test_log_schema_rejects_missing_or_structured_fields(self):
+        base = [sys.executable, str(SCRIPT), "--config", str(self.path), "log", "--record", str(self.root / "record.json")]
+        for field in ("workflow_insights", "changes_made", "validation", "blockers", "source_references"):
+            for invalid in (None, {}, [123]):
+                record = self.record()
+                record[field] = invalid
+                (self.root / "record.json").write_text(json.dumps(record))
+                result = subprocess.run(base, capture_output=True, text=True)
+                self.assertEqual(result.returncode, 1)
+        self.assertEqual(list((self.root / "conversations").glob("*.jsonl")), [])
 
     def test_cli_roundtrip_and_readonly_default(self):
         record = self.root / "record.json"

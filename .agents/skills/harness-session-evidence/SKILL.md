@@ -7,6 +7,10 @@ description: Save or inspect sanitized project session journals for cross-sessio
 
 Keep a concise record of what happened and what was verified, sufficient for another session to continue. Use the project's configured journal; do not create a global archive or copy raw chat histories by default.
 
+## When to use it
+
+Use to preserve the outcome of a work session or recover the evidence needed to resume. For example: `$harness-session-evidence save this session's changes, actual checks, and blockers for /absolute/path/to/project`, or `read the relevant journal records before we resume the failed setup`. Saving produces a sanitized record in the configured project journal and verifies it was written. Reading produces a source-backed account with current-state checks where needed. For a next-session objective and kickoff prompt, use the handoff skill; for workflow changes across records, use the improvement skill.
+
 ## Inspect existing evidence
 
 Find `harness-config.json` in the intended project and use the supplied CLI's `check` command to resolve paths. Read relevant records and their referenced sources. A report or summary establishes what was reported, not that the underlying operation succeeded. Verify current filesystem and runtime state when resuming work.
@@ -17,12 +21,15 @@ If configuration or source records are absent, say what is missing. Configure pe
 
 Prepare a temporary JSON object containing:
 
-- `session_id`: the actual chat ID or a stable unique ID for this work session.
+- `session_id`: the actual chat ID or a stable unique ID for this work session. Reuse it for checkpoints from the same chat.
+- Optional `conversation_id`: the actual shared chat ID when distinct phase IDs are needed; nonempty with no surrounding whitespace. The auditor groups by this value, otherwise by `session_id`. Keep phase labels in optional `phase` metadata; do not infer or strip legacy ID suffixes.
 - `workflow_insights`: directly observed lessons from this session; exclude inherited proposals and generated report text.
 - `changes_made`: actual edits or actions, with affected paths.
-- `validation`: performed checks and results, including failures or unverified flows.
-- `blockers`: unresolved dependencies and the next concrete action.
+- `validation`: a list of strings describing performed checks and results, including failures or unverified flows.
+- `blockers`: a list of strings describing unresolved dependencies and the next concrete action.
 - `references_prior_sessions`: existing filenames in this journal only. Put external chat/turn IDs or file/line citations in a separate `source_references` field.
+
+`workflow_insights` and `changes_made` are also required lists of strings. Include `source_references` as a list of external chat/turn IDs or file/line citations (empty when none); keep detailed structured results in an optional `validation_details` object, never in `validation`.
 
 An optional `timestamp` must be timezone-aware ISO 8601; the CLI otherwise supplies current UTC time. Never include passwords, tokens, device codes, raw environment contents, sensitive personal details, or private transcript dumps.
 

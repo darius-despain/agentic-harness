@@ -1,0 +1,15 @@
+#!/usr/bin/env python3
+"""Optional AI attribution adapter; identity is supplied by the invoking runtime."""
+import os
+from pathlib import Path
+import sys
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from git_guard import main
+
+if "HARNESS_AI_AGENT" not in os.environ:
+    sys.exit(0)
+if len(sys.argv) != 2:
+    print("Harness guard: commit message path required", file=sys.stderr)
+    sys.exit(1)
+sys.exit(main(["message", "--commit", "--file", sys.argv[1], "--agent", os.environ["HARNESS_AI_AGENT"]]))

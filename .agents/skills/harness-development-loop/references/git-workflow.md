@@ -1,83 +1,70 @@
 # Git workflow
 
-Use this procedure when work changes branches, commits or publishes code, or prepares a checkout for another session. Keep the user's chosen branch and authorization; do not make a pull request, merge, or push solely because an edit is complete.
+Use for branches, commits, publication and checkout handoff. Preserve user branch/authorization; completion alone grants no push, PR or merge permission.
 
 ## Configured preflight
 
-When `harness-config.json` declares `git_repositories` and `harness/git_preflight.py` is available, run the read-only inventory before Git work:
+- With configured `git_repositories` and `harness/git_preflight.py`, run read-only inventory before Git work:
 
 ```bash
 python3 harness/git_preflight.py --config harness-config.json
 ```
 
-Each named entry has a config-relative `path` and optional `origin` identity such as `github.com/owner/repository`. Register separate checkouts and worktrees independently; a standalone clone is not updated by a parent's submodule commands. Keep machine-specific registry paths in the local config. Branches are discovered live, never pinned from a journal. An entry missing from the registry still requires manual inspection.
-
-The inventory reports staged/unstaged/untracked filenames, private configuration names, detached HEADs, cached upstream counts and recursive gitlink drift. It never reads environment-file contents, fetches, switches branches, stages or changes configuration. Exit zero means the configured top-level inspections completed and origins matched; inspect dirty paths and every submodule result before acting. A clean parent, missing upstream, unavailable submodule or cached equality cannot establish a clean, synchronized handoff. The inventory does not detect concurrent chat ownership; check active chats and worktrees separately before mutation.
-
-Remote access is untested by default. Before network Git work in a fresh session, read prior access checkpoints and explicitly invoke one readiness check:
+- Entries use config-relative `path` and optional host/owner/repository `origin`. Register independent checkouts/worktrees separately; manually inspect unregistered targets. Discover branches live; keep machine paths local.
+- Inventory reports filenames, private path names, detached heads, cached upstream counts and recursive gitlink drift; never reads environment contents or changes state. Zero means top-level inspection/origin matching, not clean/authenticated/synchronized state. Inspect every submodule and check active chats/worktrees before mutation.
+- Before fresh-session network Git, read access checkpoints, then run:
 
 ```bash
 python3 harness/git_preflight.py --config harness-config.json --repository NAME --readiness
 ```
 
-Replace NAME with the intended configured checkout. This captures and suppresses raw diagnostics, disables interactive prompts, and independently checks `gh` account/API access and Git repository read access with timeouts. Any required failure returns nonzero. Connector access and push permission remain untested; no refs are fetched. `--probe-remote` is the narrower Git-only alternative, not an additional readiness step. Do not repeat a known failed check until an actual credential or executor-context change; a new turn alone is not such a change. Record terminal success separately from executor results. Inspect active helper/config presence and override names without values, and do not prescribe another login solely because terminal access succeeds while executor access fails. Installing this workflow does not invoke startup checks automatically.
-
-Interpret each readiness result independently of the aggregate exit code: `git_read_available` permits Git read operations even if `gh_api_available` is false. Local status, commits, metadata comparisons and local-filesystem fetches do not require network authentication. Push permission still requires the authorized push and verification. A network failure must not halt independent local work.
+- Replace `NAME` with the configured target. Readiness independently checks gh account/API and Git repository reads, suppressing diagnostics/prompts with timeouts. No refs fetched; connector/push permission untested. `--probe-remote` is a narrower alternative, not an extra step.
+- Use `git_read_available` and `gh_api_available` independently despite aggregate failure. Local status/commits/metadata/filesystem fetches need no network auth. Failed network checks do not block local work.
+- Retry known failure only after actual credential/executor-context change, never merely a new turn. Record user-terminal versus executor access separately. Inspect helper/config presence and override names without values; terminal success does not justify another login. Installation runs no startup check.
 
 ## Establish the repository and preserve work
 
-Run inspection from the requested source directory using an explicit working directory or `git -C`. Check `git rev-parse --show-toplevel`, `git status --short --branch`, `git branch --show-current`, and the intended remote. Do not print credential-bearing remote URLs; report repository identity without embedded credentials. In a parent workspace containing several repositories, identify which repository owns each changed file. A submodule commit and its parent gitlink update are separate changes.
-
-If the source is not a checkout, report that before editing and choose a durable checkout when authorized. A temporary upload repository does not turn the source into a checkout. If staging is necessary, record both paths and which one future sessions should use; retain the original files. Do not initialize over an existing repository or overwrite a populated directory to repair this.
-
-Record existing staged, unstaged, and untracked paths before making changes. When submodules are present, inspect `git submodule status --recursive` and `git submodule foreach --recursive 'git status --short --branch'`. A clean parent status alone is insufficient. Use status and filenames only for restricted `.env` and `.env.*` paths; exclude them from diffs, patches, stashes, staging, and connector payloads.
-
-Before changing a shared checkout's branch, check for another active session using it. Prefer an isolated worktree for independent work where practical; inspect attached worktrees before creating one. Do not copy private configuration into it. For a requested branch, establish whether it already exists locally or remotely before creating a replacement. Fetch when access permits; record when refs are only locally cached. Do not pull, rebase, or reset a dirty checkout to resolve uncertainty.
+- Use explicit cwd or `git -C`; inspect `rev-parse --show-toplevel`, `status --short --branch`, `branch --show-current` and remote identity without embedded credentials. Identify each file's owning repo; child commits and parent gitlinks are separate.
+- If source is not a checkout, report it and choose an authorized durable checkout; staging uploads do not repair source ownership. Record source/staging paths, retain originals; never initialize over a repo or overwrite populated directories.
+- Record existing staged/unstaged/untracked paths. Inspect `git submodule status --recursive` and `git submodule foreach --recursive 'git status --short --branch'`. Private `.env`/`.env.*` paths: status/names only; exclude from reads/diffs/patches/stashes/staging/connector payloads.
+- Before branch changes, check active sessions/checkout ownership. Prefer suitable isolated worktrees; inspect attached worktrees first, never copy private config. Check requested branch locally/remotely before creating replacements; fetch when available, label cached refs. Never pull/rebase/reset dirty work to resolve uncertainty.
 
 ## Recover from restricted configuration status
 
-A modified `.env` status is an observation, not proof that the user changed its contents. If the user's terminal and the executor disagree, record both results and mark the cause unverified; do not diagnose a sandbox defect from status alone. Continue source edits, explicit-path staging/commits and focused checks that do not consume private files. Inspect staged filenames first; pre-existing staged private paths prevent an ordinary whole-index commit.
-
-For an authorized branch switch, assess the actual owning checkout and locally available target:
+- Modified `.env` status alone establishes neither content changes nor a sandbox defect. Record terminal/executor disagreement as unverified. Continue safe edits, explicit staging/commits and checks without private files. Inspect index filenames; pre-staged private paths block ordinary whole-index commits.
+- For an authorized switch to a locally available target:
 
 ```bash
 python3 harness/git_preflight.py --config harness-config.json --repository NAME --target TARGET_REF
 ```
 
-Read `private_transition`, not just exit zero. This compares private path names, object IDs and modes across HEAD, index and target using tree/index metadata only. It never reads blobs or working environment files. When `assessment=complete` and `private_configuration_unchanged=true`, a normal, non-force switch with `--no-recurse-submodules` may be attempted after checking unrelated changes, active operations and checkout ownership. Git can still refuse; preserve its refusal and choose another route. Verify the requested target ref still equals `target_commit` immediately before switching; rerun the assessment if it moved. This is not a clean-state claim, protection against concurrent edits, or approval for rebase: intermediate replayed commits may touch private files even when endpoints match.
-
-If private metadata differs, is unmerged, or cannot be inspected, leave it intact. For independent source work, prefer an existing suitable checkout or an isolated worktree at a target that has **no tracked private paths**, as reported by `target_tracks_private_configuration=false`. Worktree creation at a commit containing tracked environment files would materialize them; do not use it as a restriction bypass. Check other submodules separately. Do not copy private configuration to the worktree. Use nonsecret fixtures for tests where possible and report credential-dependent validation as pending.
-
-Never use `assume-unchanged`, `skip-worktree`, index-only untracking, ignore rules, forced switches, automatic stash/reset/clean, or permission changes to silence private-file status. Ignore rules do not protect a tracked file from deletion by a target commit. When the required operation really must modify private configuration or a paused rebase cannot safely proceed, finish independent work and give exact user-terminal commands for only that remaining step. Preserve previews or other nonsecret obstructions outside the checkout until the entire operation finishes; restoring them between rebases can obstruct the next replay.
+- Read `private_transition`, not exit zero. HEAD/index/target private names, object IDs and modes are compared without blobs/working files.
+- Only `assessment=complete` plus `private_configuration_unchanged=true` permits considering a normal non-force switch with `--no-recurse-submodules`, after unrelated changes, active operations and ownership checks. Verify target still equals `target_commit` immediately before switching; reassess if moved. Preserve Git refusal. This proves neither cleanliness/concurrency safety nor safe rebase intermediate commits.
+- If metadata differs/unmerged/unavailable, leave private config intact. Prefer an existing suitable checkout or worktree only at a target with `target_tracks_private_configuration=false`; otherwise creation materializes private files. Assess other submodules separately; use nonsecret test fixtures, disclose pending credential checks.
+- Never silence status through assume-unchanged, skip-worktree, index-only untracking, ignores, force switches, auto-stash/reset/clean or permission changes. Ignores do not protect tracked files from target deletion.
+- If private modification/rebase is unavoidable, finish independent work and supply exact user-terminal commands for that step. Preserve nonsecret obstructions outside checkout throughout the operation; restoring between rebases may obstruct replay.
 
 ## Commit only the intended change
 
-For AI-assisted changes, append `Co-authored by: <active agent name> (AI)` to the commit message body and each pull request (PR) or merge request (MR) description. Resolve the name from the current session/runtime identity, not a fixed template value or Git author. Preserve existing attribution and verify the line is present before committing or submitting the PR/MR; do not invent an agent identity or email address.
+- Append `Co-authored by: <active agent name> (AI)` to every AI commit and PR/MR body. Resolve current runtime identity, never fixed templates/Git author/invented identity/email; preserve existing attribution and verify before submission.
+- When available, run from owning checkout:
 
-If `harness/git_guard.py` is available, run `python3 harness/git_guard.py staged`
-from the owning checkout and check a prepared message/body with
-`python3 harness/git_guard.py message --file MESSAGE_FILE --agent CURRENT_RUNTIME_AGENT`.
-Substitute the actual runtime identity and add `--commit` for a commit message
-so attribution must survive Git comment/scissors cleanup. The checks are read-only; private-path
-failures preserve the index for deliberate resolution. The optional adapters in
-`harness/hooks/` are not installed automatically. Preserve existing hooks and
-`core.hooksPath` when composing them; the commit-message adapter requires
-`HARNESS_AI_AGENT` to be supplied for AI commits and cannot infer AI involvement.
-An unset marker permits human commits, while a supplied empty marker fails.
-Hooks do not run for connector publication or guarantee PR/MR attribution; check
-those bodies explicitly. See [optional Git guard setup](../../../../README.md#optional-local-git-guards).
+```bash
+python3 harness/git_guard.py staged
+python3 harness/git_guard.py message --file MESSAGE_FILE --agent CURRENT_RUNTIME_AGENT --commit
+```
 
-Run relevant validation and inspect the intended diff with explicit safe paths. Stage explicit paths, then check the entire staged path list for pre-existing staged work before committing. If unrelated work is already staged, use a scoped commit that preserves it, or leave the commit pending with a concrete blocker; do not silently include or unstage it. Do not use broad staging that could capture private configuration, journals, or unrelated changes. Record the resulting local commit and branch.
+- Substitute real message path/identity; omit `--commit` for PR/MR bodies. Commit mode requires attribution surviving comment/scissors cleanup. Checks are read-only and preserve index on failure.
+- [Optional guards](../../../../README.md#optional-local-git-guards) are not installed automatically. Preserve hooks/`core.hooksPath`. Adapter requires supplied `HARNESS_AI_AGENT`; absent permits human commits, empty fails. Hooks cannot detect AI or cover connectors/PRs; check bodies explicitly.
+- Run relevant validation; inspect safe explicit-path diff. Stage only intended paths; inspect the entire staged filename list. Preserve unrelated staged work with scoped commits or report blocker; never silently include/unstage it. Avoid broad staging/private config/journals. Record commit/branch.
 
 ## Publish and reconcile history
 
-Check connector access and local Git access separately. On failure, inspect credential source and environment override names without exposing values; do not repeat an unchanged failing operation. Use user-run authentication commands when needed. Connector publication is a fallback only when it supports the authorized change without retrieving secrets.
-
-Persist an access checkpoint in the session record: transport (Git HTTPS/SSH, `gh`, connector), repository identity, observed success/failure, credential source presence or override names, and the next required change. Read that checkpoint before retrying an unchanged failure in another turn or chat. Do not log credential values or raw diagnostics. User reports of terminal access and agent-executor access are distinct evidence.
-
-Recovery should change a demonstrated cause. If a detected environment override is known to be stale, remove only that named override for a single child command (`env -u VARIABLE_NAME ...`), then recheck once; never dump or edit environment files. An override's presence alone does not establish that it is wrong. If sandbox network denial is indicated, use the executor's normal escalation flow; an approved executor is a changed context, not evidence that authentication is fixed. Keep raw authentication diagnostics captured. If the existing helper/keyring is unavailable to the executor and no permitted context can use it, stop that network route and use an already authorized connector or supply user-terminal recovery. Do not replace a working transport, extract tokens, install a credential bridge, or alter global authentication automatically.
-
-For GitHub HTTPS recovery, give the user commands for their own terminal; authenticate `gh` and configure the Git helper separately. Do not retrieve or paste tokens into chat:
+- Check connector and local Git access separately. On failure inspect credential-source presence/override names, never values/raw auth diagnostics; no unchanged retry. Connector fallback must support authorized work without retrieving secrets.
+- Journal access checkpoint: transport, repo identity, success/failure, credential-source presence/override names, next required change. Read before later retries; distinguish user-terminal/executor observations.
+- Recovery must address demonstrated cause: remove a known-stale override only for one child command (`env -u VARIABLE_NAME ...`), then recheck once. Presence alone proves no fault. Never dump/edit environment files.
+- For indicated sandbox network denial use normal escalation; changed executor context does not prove fixed auth. If helper/keyring remains unavailable, stop that route; use authorized connector/user-terminal recovery. Never automatically replace working transport, extract tokens, install credential bridges or change global auth.
+- For GitHub HTTPS, supply these in the user's terminal with observed absolute checkout; request success/failure only, then recheck executor once. Keep browser/device prompts there. Preserve working SSH unless user requests change; HTTPS setup does not repair SSH.
 
 ```bash
 cd /absolute/path/to/the/checkout
@@ -86,24 +73,15 @@ gh auth login --hostname github.com --git-protocol https --web &&
     git ls-remote --exit-code origin HEAD >/dev/null
 ```
 
-Substitute the observed checkout path in the delivered command. The final command should succeed without printing credentials. Ask for success/failure only, then recheck once in the agent executor. Browser/device-login prompts must remain in the user's terminal. See the official [login](https://cli.github.com/manual/gh_auth_login) and [Git helper](https://cli.github.com/manual/gh_auth_setup-git) documentation. Keep an existing working SSH transport unless the user asks to change it; HTTPS helper setup does not repair SSH access.
-
-Before publication, establish the current remote branch tip and intended base. If another session advanced it, inspect those commits before proceeding; do not overwrite them or force-push to make history match. Push the explicit intended branch through Git when it works, then verify the remote branch points to the intended commit. If verification fails, report publication as unverified rather than retrying blindly.
-
-For connector publication, preserve remote parent history and submit only intended files. Use an expected-head check or equivalent conflict protection if supported. If the tool cannot protect against concurrent updates, recheck the tip immediately before mutation and verify afterward; stop on conflicting changes. Compare the remote result with the intended paths and content, and ensure unrelated remote changes survived.
-
-Matching file content or tree hashes does not prove matching commit history. Record the local commit, remote commit, and whether Git has fetched the remote commit. If they differ, report that publication succeeded but local history remains unreconciled. When Git access is restored, fetch and inspect the graph and unpublished local commits before choosing a merge, rebase, or replacement. Do not automatically reset or replay an already published change. Preserve the local commit until reconciliation is verified.
-
-After connector publication with divergent history, persist a `git_handoff` object in the session record with checkout path, branch, local commit, remote commit, remote parent, intended paths, remote commit fetched (true/false), reconciliation status, and next action. Include the PR URL when applicable. This is a checkpoint, not authorization to reset, rebase or republish. Before later publication on that branch, inspect this checkpoint and the current heads so an already published change is not submitted again as a new commit. Use normal Git fetch/graph inspection for reconciliation once access works; matching blobs or hand-built commit objects are not a general repair strategy.
-
-For submodule updates, decide explicitly between restoring the parent's recorded gitlinks and advancing child repos to newer remote commits. `git submodule update --init --recursive` restores the recorded revision by default; `--remote` selects a remote-tracking revision and can dirty the parent gitlink. Verify every child's dirty paths and unpublished commits before either operation. Do not run bootstrap snippets that switch the parent to main, create branches in all children or hide errors with `|| true` in an active development checkout. Use the owning checkout from the registry and preserve its current branch. See [Git's submodule documentation](https://git-scm.com/docs/git-submodule).
+- Before publication establish live remote branch/base; inspect concurrent advances. Never overwrite/force-push to match history. Push explicit intended branch via working Git; verify remote equals intended commit. Failed verification means unverified, not blind retry.
+- Connectors: preserve remote parents, submit intended files, use expected-head protection. If unavailable, recheck tip immediately before mutation and afterward; stop on conflicts. Verify paths/content and survival of unrelated changes.
+- Equal content/trees do not prove history equality. Record local/remote commits and whether remote is fetched. Divergence means published but unreconciled; preserve local commit. When Git recovers, fetch/inspect graph and unpublished commits before choosing merge/rebase/replacement. No automatic reset/replay of published work; matching blobs/hand-built commits are not general reconciliation.
+- After divergent connector publication, journal `git_handoff`: checkout, branch, local/remote commits, remote parent, intended paths, fetched boolean, reconciliation status/next action, PR URL. Before later publication inspect checkpoint/current heads to prevent duplicate submission. Checkpoint grants no reset/rebase/republish authority.
+- Submodules: explicitly choose recorded gitlinks (`update --init --recursive`) versus remote advancement (`--remote`, potentially dirtying parent). First inspect each child's changes/unpublished commits. Never bootstrap-switch parent to main, create branches in every child or hide failures via `|| true`; use registered owning checkout/current branch.
 
 ## Prepare a handoff
 
-A request to leave a PR open and return to main does not authorize discarding other work. Inventory remaining changes and unpublished commits before switching. Preserve useful nonsecret work in a durable branch or patch and report its location. Restore or discard only changes covered by the user's authorization.
-
-Submodule pointers can differ from the parent commit while their files are clean. Before restoring recorded pointers, check each affected submodule for dirty files and local commits absent from known remote refs; disclose when refs are stale. Update only the authorized submodules, without `--force`. Recheck recursively afterward.
-
-If private configuration blocks cleanup, complete independent safe steps, then provide copy-and-paste commands for the user's own terminal to back up the exact affected files privately and perform the authorized restore. Do not read or copy those files through agent tools, and do not request their contents. Explain that a clean checkout may need local configuration restored before the app runs.
-
-Verify the final parent branch, staged/unstaged/untracked status, submodule status, and relation to remote history. When restricted files make agent status unreliable, ask for status-only verification from the user's terminal. State whether main matches a freshly fetched remote or only cached refs. A handoff should identify checkout path, branch, local/remote commits when relevant, PR state, preserved work, and any pending reconciliation or configuration step. Never report a clean or synchronized checkout from a parent-only status or content-only comparison.
+- Returning to main with an open PR grants no discard permission. Inventory changes/unpublished commits; preserve useful nonsecret work in durable branch/patch and report path. Restore/discard only authorized changes.
+- Before restoring gitlinks, inspect children for dirty files/local commits absent from known remote refs; label stale refs. Update only authorized children without force; recheck recursively.
+- Private cleanup blockers: finish safe work, then give exact user-terminal commands to privately back up affected files and perform authorized restore. Never agent-read/copy/request contents. Explain local config may need restoring before app runs.
+- Verify final branch, full status, recursive submodules and remote-history relation. If restricted files make agent status unreliable, request terminal status-only verification. Label freshly fetched versus cached main. Report checkout, branch, relevant local/remote commits, PR state, preserved work, pending reconciliation/config. Parent cleanliness/content equality alone never proves clean synchronized handoff.

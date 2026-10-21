@@ -21,6 +21,10 @@ causes an error before installation writes. Review and migrate those cases expli
 this installer does not guess how to replace customized files. Filesystem failures
 during application can leave a partial installation; correct the failure and rerun.
 
+Configured journal/report directories are ignored as literal paths, including names
+with Git pattern characters such as `[` or `*`. Paths containing carriage returns or
+newlines are rejected before writing because Git ignore rules are line based.
+
 For a legacy nested config, preserve it first, put a valid config at the project root,
 and resolve data paths relative to that root. Keep reports separate from the journal.
 A compatibility symlink from the old nested path to the root config can preserve old

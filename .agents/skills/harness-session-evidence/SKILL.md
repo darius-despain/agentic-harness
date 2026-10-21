@@ -5,42 +5,35 @@ description: Save or inspect sanitized project session journals for cross-sessio
 
 # Session evidence
 
-Keep a concise record of what happened and what was verified, sufficient for another session to continue. Use the project's configured journal; do not create a global archive or copy raw chat histories by default.
-
 ## When to use it
 
-Use to preserve the outcome of a work session or recover the evidence needed to resume. For example: `$harness-session-evidence save this session's changes, actual checks, and blockers for /absolute/path/to/project`, or `read the relevant journal records before we resume the failed setup`. Saving produces a sanitized record in the configured project journal and verifies it was written. Reading produces a source-backed account with current-state checks where needed. For a next-session objective and kickoff prompt, use the handoff skill; for workflow changes across records, use the improvement skill.
+- Save verified session outcomes or recover source-backed context. Use the configured project journal; no global archive/raw chat copying by default.
+- Next-session objectives belong to handoff; cross-session workflow changes to improvement.
 
 ## Inspect existing evidence
 
-Find `harness-config.json` in the intended project and use the supplied CLI's `check` command to resolve paths. Read relevant records and their referenced sources. A report or summary establishes what was reported, not that the underlying operation succeeded. Verify current filesystem and runtime state when resuming work.
-
-If configuration or source records are absent, say what is missing. Configure persistence only when that is in scope; otherwise report that no journal was saved. Do not repurpose a different project's journal because it happens to exist.
+- Locate intended `harness-config.json`; run `check` to resolve paths. Read relevant records/references, then verify mutable filesystem/runtime state.
+- Summaries establish reported claims, not underlying success. Report missing config/sources; configure persistence only in scope, never borrow another project's journal.
 
 ## Save a record
 
-Prepare a temporary JSON object containing:
-
-- `session_id`: the actual chat ID or a stable unique ID for this work session. Reuse it for checkpoints from the same chat.
-- Optional `conversation_id`: the actual shared chat ID when distinct phase IDs are needed; nonempty with no surrounding whitespace. The auditor groups by this value, otherwise by `session_id`. Keep phase labels in optional `phase` metadata; do not infer or strip legacy ID suffixes.
-- `workflow_insights`: directly observed lessons from this session; exclude inherited proposals and generated report text.
-- `changes_made`: actual edits or actions, with affected paths.
-- `validation`: a list of strings describing performed checks and results, including failures or unverified flows.
-- `blockers`: a list of strings describing unresolved dependencies and the next concrete action.
-- `references_prior_sessions`: existing filenames in this journal only. Put external chat/turn IDs or file/line citations in a separate `source_references` field.
-
-`workflow_insights` and `changes_made` are also required lists of strings. Include `source_references` as a list of external chat/turn IDs or file/line citations (empty when none); keep detailed structured results in an optional `validation_details` object, never in `validation`.
-
-An optional `timestamp` must be timezone-aware ISO 8601; the CLI otherwise supplies current UTC time. Never include passwords, tokens, device codes, raw environment contents, sensitive personal details, or private transcript dumps.
-
-From the project root, run:
+- Prepare temporary sanitized JSON:
+  - `session_id`: actual chat ID or stable unique session ID, reused across checkpoints.
+  - Optional `conversation_id`: actual shared chat ID, nonempty/unpadded; groups distinct phase IDs. Otherwise grouping uses unchanged `session_id`; never infer/strip legacy suffixes. Optional `phase` is metadata.
+  - Required string lists: `workflow_insights` (direct observations only), `changes_made` (actual actions/paths), `validation` (performed checks/results, failures/unverified flows), `blockers` (dependencies/next action), `source_references` (external chat/turn or file/line citations; empty allowed).
+  - Optional `references_prior_sessions`: existing filenames in this journal only. Structured checks belong in optional `validation_details`, never `validation`.
+  - Optional `timestamp`: timezone-aware ISO 8601; omitted means current UTC.
+- Exclude inherited proposals/generated report text, secrets, device codes, raw environment/transcripts, sensitive personal data.
+- From project root, run `check` before logging:
 
 ```bash
+python3 harness/audit.py --config harness-config.json check
 python3 harness/audit.py --config harness-config.json log --record path/to/session-record.json
 ```
 
-Check the command result and the newly written file before claiming persistence. Preserve existing journals; the logger writes a new exclusive JSONL file. Session logs and generated reports are ignored by Git by default. Keep shareable, sanitized change rationale in tracked documentation when needed.
+- Check result and read back the exclusive new JSONL file before claiming persistence. Preserve old journals; disclose failure. Journals/reports are ignored by default; tracked docs may hold sanitized shareable rationale.
 
 ## Review patterns
 
-Use `audit` for read-only aggregation, or `audit --write` when saving a separate report is requested. Report findings with source filename and line number. Count distinct sessions, exclude generated audits, and distinguish demonstrated failures from unverified suggestions. Logging records evidence; it does not itself implement improvements or schedule future work.
+- `audit` aggregates read-only; `audit --write` saves a separate report only when requested.
+- Cite filename/line; count independent sessions, exclude generated audits, separate demonstrated failures from suggestions. Logging grants no implementation/scheduling authority.

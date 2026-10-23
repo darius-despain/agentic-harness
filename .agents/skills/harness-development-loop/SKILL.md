@@ -8,6 +8,8 @@ description: Iterate on a software change through implementation, focused verifi
 ## When to use it
 
 - Implement/fix/continue concrete requested behavior. Output: scoped changes, actual verification, blockers, configured journal. PR review is a separate request.
+- Default to the single-agent loop below for trivial/scoped changes. Explicitly request `orchestrated mode` (for example, `$harness-development-loop orchestrated mode: <objective>`) to opt in; multiple tracks alone do not opt in.
+- When opted in, route to [orchestration](references/orchestration.md), [task contracts](references/task-contract.md), and the [orchestrator](agents/orchestrator.md). Those rules replace the execution loop, not repository instructions or Git/credential safeguards. Use role-specific files only when dispatching that role. Do not silently substitute unavailable models or claim delegation occurred.
 
 ## Establish the target
 

@@ -1,0 +1,10 @@
+{
+  "profiles": [
+    {"id": "calibration-good", "backend": "scripted", "fixture": "good", "model": null, "reasoning": null},
+    {"id": "calibration-bad", "backend": "scripted", "fixture": "bad", "model": null, "reasoning": null}
+  ],
+  "repetitions": 1,
+  "max_runs": 20,
+  "case_timeout_seconds": 30,
+  "max_external_calls": 0
+}

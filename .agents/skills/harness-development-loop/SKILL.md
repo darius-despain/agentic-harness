@@ -18,6 +18,8 @@ description: Iterate on a software change through implementation, focused verifi
 
 ## Implement, verify, diagnose, repeat
 
+For an explicitly requested orchestrated/subagent loop, read [orchestration](references/orchestration.md). It adds Astra coordination and bounded Sol workers to this same loop; ordinary invocation keeps the direct workflow. Role prompts are instructions loaded by the caller, not automatically registered agents or model settings.
+
 1. Make the smallest coherent change; inspect setup for destructive effects.
 2. Run focused behavioral checks; reproduce regressions and add meaningful tests when warranted. Exercise UI/integration interactions when access permits; report unverified flows.
 3. Classify failures: changed code, existing behavior, environment, credentials, external dependency. Fix one coherent cause; rerun affected checks.

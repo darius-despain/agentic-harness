@@ -12,6 +12,8 @@ python3 harness/git_preflight.py --config harness-config.json
 
 - Entries use config-relative `path` and optional host/owner/repository `origin`. Register independent checkouts/worktrees separately; manually inspect unregistered targets. Discover branches live; keep machine paths local.
 - Inventory reports filenames, private path names, detached heads, cached upstream counts and recursive gitlink drift; never reads environment contents or changes state. Zero means top-level inspection/origin matching, not clean/authenticated/synchronized state. Inspect every submodule and check active chats/worktrees before mutation.
+- **Local-First Default:** Do NOT run `git_preflight.py ... --readiness`, `git fetch`, `gh` API probes, or MCP GitHub connector searches unless the user explicitly asks to `fetch`, `pull`, `push`, `sync`, `open a PR`, or `switch branches against remote`.
+- For local implementation/documentation tasks, run ONLY fast local checks on the target repository (`git status --short --branch`).
 - Before fresh-session network Git, read access checkpoints, then run:
 
 ```bash
@@ -26,7 +28,7 @@ python3 harness/git_preflight.py --config harness-config.json --repository NAME 
 
 - Use explicit cwd or `git -C`; inspect `rev-parse --show-toplevel`, `status --short --branch`, `branch --show-current` and remote identity without embedded credentials. Identify each file's owning repo; child commits and parent gitlinks are separate.
 - If source is not a checkout, report it and choose an authorized durable checkout; staging uploads do not repair source ownership. Record source/staging paths, retain originals; never initialize over a repo or overwrite populated directories.
-- Record existing staged/unstaged/untracked paths. Inspect `git submodule status --recursive` and `git submodule foreach --recursive 'git status --short --branch'`. Private `.env`/`.env.*` paths: status/names only; exclude from reads/diffs/patches/stashes/staging/connector payloads.
+- Record existing staged/unstaged/untracked paths. **Lazy Submodule Inspection:** Do NOT run recursive submodule history/ancestry comparisons or inspect sibling checkouts unless the user's task explicitly targets a submodule or gitlink update. Private `.env`/`.env.*` paths: status/names only; exclude from reads/diffs/patches/stashes/staging/connector payloads.
 - Before branch changes, check active sessions/checkout ownership. Prefer suitable isolated worktrees; inspect attached worktrees first, never copy private config. Check requested branch locally/remotely before creating replacements; fetch when available, label cached refs. Never pull/rebase/reset dirty work to resolve uncertainty.
 
 ## Recover from restricted configuration status

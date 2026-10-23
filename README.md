@@ -101,3 +101,8 @@ python3 -m unittest discover -s tests -v
 
 - Read [guard setup](docs/installation-and-git.md#optional-local-git-guards) before enabling adapters; preserve existing hooks and `core.hooksPath`.
 - Checks are read-only, optional, and grant no permissions. Private-path and runtime attribution rules apply even when hooks do not run.
+
+## Agent evaluations
+
+See [the offline orchestrator evaluation framework](evals/agents/README.md) for
+scripted multi-turn calibration, model adapter configuration, scoring and JSON results.

@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Agent simulated episode results v1",
+  "type": "object",
+  "required": ["schema_version", "timestamp", "execution", "live_multi_agent", "hashes", "config", "results", "comparison"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "timestamp": {"type": "string", "format": "date-time"},
+    "execution": {"const": "simulated_decisions_fixed_workers"},
+    "live_multi_agent": {"const": false},
+    "hashes": {"type": "object", "required": ["suite", "contracts", "protocol", "scorer"], "additionalProperties": {"type": "string", "pattern": "^[a-f0-9]{64}$"}},
+    "config": {"type": "object"},
+    "results": {"type": "array", "items": {
+      "type": "object",
+      "required": ["case_id", "case_hash", "profile", "attempt", "passed", "quality", "checks", "contract_violations", "trace", "telemetry", "error", "latency_seconds", "cost_usd", "tool_calls", "worker_launches"],
+      "properties": {
+        "case_id": {"type": "string"}, "case_hash": {"type": "string"},
+        "profile": {"type": "object"}, "attempt": {"type": "integer", "minimum": 1},
+        "passed": {"type": "boolean"}, "quality": {"type": "number", "minimum": 0, "maximum": 1},
+        "checks": {"type": "array"}, "contract_violations": {"type": "array"},
+        "trace": {"type": "array"}, "telemetry": {"type": "array"},
+        "error": {"type": ["string", "null"]},
+        "latency_seconds": {"type": "number", "minimum": 0},
+        "cost_usd": {"type": ["number", "null"], "minimum": 0},
+        "tool_calls": {"type": "integer", "minimum": 0}, "worker_launches": {"type": "integer", "minimum": 0}
+      }
+    }},
+    "comparison": {"type": "array", "items": {"type": "object", "required": ["profile", "runs", "pass_rate", "mean_quality", "contract_violations", "latency_seconds", "cost_usd"]}}
+  }
+}

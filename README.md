@@ -80,7 +80,7 @@ python3 -m unittest discover -s tests -v
 ## Reusable skills
 
 - [Development](.agents/skills/harness-development-loop/SKILL.md): implement requested behavior, verify, report blockers.
-  - Optional [orchestrated mode](.agents/skills/harness-development-loop/references/orchestration.md): request an Astra coordinator with bounded Sol implementation, verification and diagnosis workers. Role files provide prompts; the runtime selects models. Example: `$harness-development-loop use the orchestrated mode to fix <behavior> in <checkout>`.
+  - Optional [orchestrated mode](.agents/skills/harness-development-loop/references/orchestration.md): explicitly opt in to an Astra executive with one active Sol worker at a time, bounded verification/escalation and scoped cleanup. Role files provide prompts; the runtime selects models. Example: `$harness-development-loop orchestrated mode: fix <behavior> in <checkout>`.
 - [PR review](.agents/skills/harness-pr-review/SKILL.md): inspect PR/branch with an independent reviewer; recommend a merge decision. Posting requires authorization.
 - [Session evidence](.agents/skills/harness-session-evidence/SKILL.md): save/verify sanitized outcomes or recover source-backed context.
 - [Handoff](.agents/skills/harness-handoff/SKILL.md): private brief and copyable next-chat prompt; clarify materially different objectives. Local scoped commits may be appropriate; pushing requires an explicit request.

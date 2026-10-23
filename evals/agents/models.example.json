@@ -28,8 +28,8 @@
   ],
   "repetitions": 2,
   "max_runs": 4,
-  "max_external_calls": 12,
+  "max_external_calls": 24,
   "case_timeout_seconds": 60,
-  "max_cost_usd": 0.12,
+  "max_cost_usd": 0.24,
   "per_call_cost_ceiling_usd": 0.01
 }

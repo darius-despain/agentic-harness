@@ -8,6 +8,8 @@ description: Iterate on a software change through implementation, focused verifi
 ## When to use it
 
 - Implement/fix/continue concrete requested behavior. Output: scoped changes, actual verification, blockers, configured journal. PR review is a separate request.
+- Default to the single-agent loop below for trivial/scoped changes. Explicitly request `orchestrated mode` (for example, `$harness-development-loop orchestrated mode: <objective>`) to opt in; multiple tracks alone do not opt in.
+- When opted in, route to [orchestration](references/orchestration.md), [task contracts](references/task-contract.md), and the [orchestrator](agents/orchestrator.md). Those rules replace the execution loop, not repository instructions or Git/credential safeguards. Use role-specific files only when dispatching that role. Do not silently substitute unavailable models or claim delegation occurred.
 
 ## Establish the target
 
@@ -17,8 +19,6 @@ description: Iterate on a software change through implementation, focused verifi
 - Before branches, commits, pushes, connector publication, or cleanup, read [Git workflow](references/git-workflow.md).
 
 ## Implement, verify, diagnose, repeat
-
-For an explicitly requested orchestrated/subagent loop, read [orchestration](references/orchestration.md). It adds Astra coordination and bounded Sol workers to this same loop; ordinary invocation keeps the direct workflow. Role prompts are instructions loaded by the caller, not automatically registered agents or model settings.
 
 1. Make the smallest coherent change; inspect setup for destructive effects.
 2. Run focused behavioral checks; reproduce regressions and add meaningful tests when warranted. Exercise UI/integration interactions when access permits; report unverified flows.

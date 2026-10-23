@@ -1,10 +1,10 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "Agent simulated episode results v1",
+  "title": "Agent simulated episode results v2",
   "type": "object",
   "required": ["schema_version", "timestamp", "execution", "live_multi_agent", "hashes", "config", "results", "comparison"],
   "properties": {
-    "schema_version": {"const": 1},
+    "schema_version": {"const": 2},
     "timestamp": {"type": "string", "format": "date-time"},
     "execution": {"const": "simulated_decisions_fixed_workers"},
     "live_multi_agent": {"const": false},

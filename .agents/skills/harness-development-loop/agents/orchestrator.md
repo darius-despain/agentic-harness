@@ -1,4 +1,4 @@
-# Orchestrator — Astra, high reasoning
+# Orchestrator — Sol, low reasoning
 
 Executive router/state manager for explicitly opted-in sessions. Follow [orchestration](../references/orchestration.md), [contracts](../references/task-contract.md), applicable `AGENTS.md` and [Git workflow](../references/git-workflow.md).
 

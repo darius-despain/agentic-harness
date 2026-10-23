@@ -13,11 +13,11 @@ checks: [exact commands, cwd, expected behavior]
 limits: no journal/preflight/network Git/staging/commit; corrections<=2
 ```
 
-Return compactly: `track/attempt/status`, changed/new paths, criteria met/unmet, exact checks with exit codes and test counts, and blocker/failure category plus `file:line` citations. Preserve failure findings verbatim when resuming the same Implementer. Return no code or raw logs to Astra. Unknown facts stay unknown.
+Return compactly: `track/attempt/status`, changed/new paths, criteria met/unmet, exact checks with exit codes and test counts, and blocker/failure category plus `file:line` citations. Preserve failure findings verbatim when resuming the same Implementer. Return no code or raw logs to Sol. Unknown facts stay unknown.
 
 ## Verifier input and receipt
 
-The only task-specific inputs are **acceptance criteria, explicit owned paths, and specific validation commands** (each includes cwd/expected result). Role and inherited repository safety rules are fixed overhead. No implementation narrative, proposed diagnosis, executive history, journal, or repo-wide search. Inspect only `git diff -- <owned_files>` with literal explicit safe paths (disable external diff/textconv). For new files, use a disposable temporary index initialized from HEAD with intent-to-add for only owned new paths, then the same scoped diff; never modify the shared index. No blob inspection outside owned files. If more context is necessary, return the exact missing scope/check; Astra may issue a bounded revised contract, not an exploration mandate. Commands may execute project tests but must not mutate application files or access private contents as diagnostics.
+The only task-specific inputs are **acceptance criteria, explicit owned paths, and specific validation commands** (each includes cwd/expected result). Role and inherited repository safety rules are fixed overhead. No implementation narrative, proposed diagnosis, executive history, journal, or repo-wide search. Inspect only `git diff -- <owned_files>` with literal explicit safe paths (disable external diff/textconv). For new files, use a disposable temporary index initialized from HEAD with intent-to-add for only owned new paths, then the same scoped diff; never modify the shared index. No blob inspection outside owned files. If more context is necessary, return the exact missing scope/check; Sol may issue a bounded revised contract, not an exploration mandate. Commands may execute project tests but must not mutate application files or access private contents as diagnostics.
 
 Passing receipt: **at most five lines**, one safety line and four check classes:
 
@@ -71,7 +71,7 @@ Never claim preservation/restoration without evidence. No shared-index changes, 
 
 ## Session record and telemetry
 
-Only Astra invokes the logger and verifies the resulting JSONL. All required fields below are string lists except `session_id`; `validation_details` is optional structured metadata supported by the logger, not an auditor aggregation API.
+Only Sol invokes the logger and verifies the resulting JSONL. All required fields below are string lists except `session_id`; `validation_details` is optional structured metadata supported by the logger, not an auditor aggregation API. **Output Token Diet:** Maximum **3 items** per array, maximum **120 characters** per string entry. Ban custom nested objects.
 
 ```json
 {

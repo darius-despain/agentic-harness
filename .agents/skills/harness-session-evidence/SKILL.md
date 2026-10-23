@@ -12,7 +12,7 @@ description: Save or inspect sanitized project session journals for cross-sessio
 
 ## Inspect existing evidence
 
-- Locate intended `harness-config.json`; run `check` to resolve paths. Read relevant records/references, then verify mutable filesystem/runtime state.
+- Locate intended `harness-config.json`; run `check` to resolve paths. **Zero-Scan Default:** Do not read full directories of JSONL files unless requested. If requested, read at most the **1 latest file** by filename sort. Read relevant records/references, then verify mutable filesystem/runtime state.
 - Summaries establish reported claims, not underlying success. Report missing config/sources; configure persistence only in scope, never borrow another project's journal.
 
 ## Save a record
@@ -21,6 +21,7 @@ description: Save or inspect sanitized project session journals for cross-sessio
   - `session_id`: actual chat ID or stable unique session ID, reused across checkpoints.
   - Optional `conversation_id`: actual shared chat ID, nonempty/unpadded; groups distinct phase IDs. Otherwise grouping uses unchanged `session_id`; never infer/strip legacy suffixes. Optional `phase` is metadata.
   - Required string lists: `workflow_insights` (direct observations only), `changes_made` (actual actions/paths), `validation` (performed checks/results, failures/unverified flows), `blockers` (dependencies/next action), `source_references` (external chat/turn or file/line citations; empty allowed).
+  - **Output Token Diet:** Maximum **3 items** per array, maximum **120 characters** per string entry. Ban custom nested objects.
   - Optional `references_prior_sessions`: existing filenames in this journal only. Structured checks belong in optional `validation_details`, never `validation`.
   - Optional `timestamp`: timezone-aware ISO 8601; omitted means current UTC.
 - Exclude inherited proposals/generated report text, secrets, device codes, raw environment/transcripts, sensitive personal data.

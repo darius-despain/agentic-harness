@@ -76,7 +76,7 @@ Only Sol invokes the logger and verifies the resulting JSONL. All required field
 ```json
 {
   "session_id": "stable-session-id",
-  "workflow_insights": ["[ORCH_TELEMETRY] track=T1 | outcome=verified | spawns=Impl(Sol-Med):1,Ver(Sol-Med):1,Inv(Sol-High):0,Clean(Sol-Low):0 | cycles=0 | reframed=false"],
+  "workflow_insights": ["[ORCH] mode=subagent | spawns=Impl(Sol-Low):1,Ver(Sol-Low):1 | cycles=0 | outcome=verified"],
   "changes_made": ["T1: observed resulting behavior"],
   "validation": ["syntax: outcome; tests: command/exit/counts; service_health: outcome; user_flows: outcome"],
   "blockers": [],
@@ -88,7 +88,7 @@ Only Sol invokes the logger and verifies the resulting JSONL. All required field
 Replace examples with actual observations/citations and one telemetry string per track, exactly:
 
 ```text
-[ORCH_TELEMETRY] track=<id> | outcome=<verified|blocked-reverted|escalated> | spawns=Impl(Sol-Med):<n>,Ver(Sol-Med):<n>,Inv(Sol-High):<n>,Clean(Sol-Low):<n> | cycles=<n> | reframed=<true|false>
+[ORCH] mode=<fast-path|subagent> | spawns=Impl(Sol-Low):1,Ver(Sol-Low):1 | cycles=0 | outcome=verified
 ```
 
 Count spawns, not resumptions; record correction cycles actually used (0–2). Use `escalated` for unresolved tracks without verified restoration; retain cleanup details and patch paths in `blockers`/structured metadata. No invented token savings, test results, or spawn counts.

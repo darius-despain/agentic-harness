@@ -81,7 +81,7 @@ def collect(config, now):
                     raise ValueError("workflow_insights must be a list of strings")
                 if not cutoff <= date <= now:
                     continue
-                for insight in dict.fromkeys(i.strip() for i in insights if i.strip()):
+                for insight in dict.fromkeys(filter(None, map(str.strip, insights))):
                     entry = grouped[insight]
                     entry["sessions"].add(identity)
                     evidence = {"source": source, "session_id": session, "timestamp": record["timestamp"]}

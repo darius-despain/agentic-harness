@@ -63,7 +63,7 @@ class ProjectInstallTests(unittest.TestCase):
         self.run_install()
         config_path = self.root / 'harness-config.json'
         config = json.loads(config_path.read_text())
-        paths = ('notes[private]', 'reports*?\\literal')
+        paths = ('notes[private]', 'reports*?\literal')
         config.update(session_persistence_dir=paths[0], audit_output_dir=paths[1])
         config_path.write_text(json.dumps(config))
         self.run_install()
@@ -118,7 +118,21 @@ class ProjectInstallTests(unittest.TestCase):
             self.assertFalse((self.root/'harness').exists())
             self.assertEqual(list(Path(outside).iterdir()),[])
 
+    def test_ignore_directory_function(self):
+        self.assertEqual(install_project.ignore_directory(Path('simple')), '/simple/')
+        self.assertEqual(install_project.ignore_directory(Path('nested/dir')), '/nested/dir/')
+        self.assertEqual(install_project.ignore_directory(Path('path/with*')), '/path/with\\*/')
+        self.assertEqual(install_project.ignore_directory(Path('path/with?')), '/path/with\\?/')
+        self.assertEqual(install_project.ignore_directory(Path('path/with[abc]')), '/path/with\\[abc\\]/')
+        self.assertEqual(install_project.ignore_directory(Path('path/with\\backslash')), '/path/with\\\\backslash/')
 
+        with self.assertRaises(ValueError) as context:
+            install_project.ignore_directory(Path('path/with\nbreak'))
+        self.assertIn('cannot contain line breaks', str(context.exception))
+
+        with self.assertRaises(ValueError) as context:
+            install_project.ignore_directory(Path('path/with\rbreak'))
+        self.assertIn('cannot contain line breaks', str(context.exception))
 
     @patch('sys.stderr', new_callable=io.StringIO)
     def test_main_prints_installation_error(self, mock_stderr):

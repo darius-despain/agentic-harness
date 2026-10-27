@@ -7,7 +7,7 @@ import tempfile
 import unittest
 from unittest.mock import patch
 from types import SimpleNamespace
-from evals.agents.runner import HERE, ROOT, episode, run, score, validate_response, safe_path
+from evals.agents.runner import HERE, ROOT, episode, run, score, validate_response, safe_path, digest
 from harness.model_routing import RoutingConfig
 
 
@@ -45,6 +45,15 @@ class AgentEvalsTest(unittest.TestCase):
         self.assertFalse(safe_path('dir/.env'))
         self.assertFalse(safe_path('dir/.env.test'))
 
+    def test_digest(self):
+        self.assertEqual(
+            digest({'a': 1, 'b': 2}),
+            digest({'b': 2, 'a': 1})
+        )
+        self.assertEqual(
+            digest({'a': 1, 'b': 2}),
+            'd8497d9d82770a70729261095aa98f7ef5154d7af499f8037b6ca250296785a6'
+        )
 
     def test_calibration_all_cases_and_unknown_telemetry(self):
         result = run(self.config, self.cases)

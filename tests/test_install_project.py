@@ -1,11 +1,20 @@
+import importlib.util
+import io
 import json
 from pathlib import Path
 import subprocess
 import sys
 import tempfile
 import unittest
+from unittest.mock import patch
 
 SCRIPT = Path(__file__).resolve().parents[1] / 'harness/install_project.py'
+
+sys.path.insert(0, str(SCRIPT.parent))
+spec = importlib.util.spec_from_file_location("install_project", SCRIPT)
+install_project = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(install_project)
+sys.path.pop(0)
 
 
 class ProjectInstallTests(unittest.TestCase):
@@ -109,6 +118,15 @@ class ProjectInstallTests(unittest.TestCase):
             self.assertFalse((self.root/'harness').exists())
             self.assertEqual(list(Path(outside).iterdir()),[])
 
+
+
+    @patch('sys.stderr', new_callable=io.StringIO)
+    def test_main_prints_installation_error(self, mock_stderr):
+        with patch.object(install_project, 'install', side_effect=ValueError('mock error')):
+            with patch('sys.argv', ['install_project.py', str(self.root), '--project', 'fixture']):
+                result = install_project.main()
+                self.assertEqual(result, 1)
+                self.assertIn('Installation error: mock error', mock_stderr.getvalue())
 
 if __name__ == '__main__':
     unittest.main()

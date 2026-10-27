@@ -5,7 +5,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
-from evals.agents.runner import HERE, ROOT, episode, run, score, validate_response
+from evals.agents.runner import HERE, ROOT, episode, run, score, validate_response, safe_path
 
 
 class AgentEvalsTest(unittest.TestCase):
@@ -15,6 +15,32 @@ class AgentEvalsTest(unittest.TestCase):
 
     def case(self, name):
         return next(c for c in self.cases if c['id'] == name)
+
+    def test_safe_path(self):
+        # Valid cases
+        self.assertTrue(safe_path('file.txt'))
+        self.assertTrue(safe_path('dir/file.txt'))
+        self.assertTrue(safe_path('dir/subdir/file.txt'))
+
+        # Invalid cases: types/empty
+        self.assertFalse(safe_path(None))
+        self.assertFalse(safe_path(123))
+        self.assertFalse(safe_path(''))
+
+        # Invalid cases: absolute
+        self.assertFalse(safe_path('/file.txt'))
+        self.assertFalse(safe_path('/dir/file.txt'))
+
+        # Invalid cases: traversal
+        self.assertFalse(safe_path('../file.txt'))
+        self.assertFalse(safe_path('dir/../../file.txt'))
+        self.assertFalse(safe_path('..'))
+
+        # Invalid cases: .env files
+        self.assertFalse(safe_path('.env'))
+        self.assertFalse(safe_path('.env.local'))
+        self.assertFalse(safe_path('dir/.env'))
+        self.assertFalse(safe_path('dir/.env.test'))
 
     def test_calibration_all_cases_and_unknown_telemetry(self):
         result = run(self.config, self.cases)

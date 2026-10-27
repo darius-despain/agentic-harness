@@ -5,7 +5,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
-from evals.agents.runner import HERE, ROOT, episode, run, score, validate_response
+from evals.agents.runner import HERE, ROOT, episode, run, score, validate_response, digest
 
 
 class AgentEvalsTest(unittest.TestCase):
@@ -15,6 +15,16 @@ class AgentEvalsTest(unittest.TestCase):
 
     def case(self, name):
         return next(c for c in self.cases if c['id'] == name)
+
+    def test_digest(self):
+        self.assertEqual(
+            digest({'a': 1, 'b': 2}),
+            digest({'b': 2, 'a': 1})
+        )
+        self.assertEqual(
+            digest({'a': 1, 'b': 2}),
+            'd8497d9d82770a70729261095aa98f7ef5154d7af499f8037b6ca250296785a6'
+        )
 
     def test_calibration_all_cases_and_unknown_telemetry(self):
         result = run(self.config, self.cases)

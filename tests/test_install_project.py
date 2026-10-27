@@ -1,3 +1,4 @@
+import importlib.util
 import json
 from pathlib import Path
 import subprocess
@@ -6,6 +7,11 @@ import tempfile
 import unittest
 
 SCRIPT = Path(__file__).resolve().parents[1] / 'harness/install_project.py'
+sys.path.insert(0, str(SCRIPT.parent))
+spec = importlib.util.spec_from_file_location("install_project", SCRIPT)
+install_project = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(install_project)
+sys.path.pop(0)
 
 
 class ProjectInstallTests(unittest.TestCase):
@@ -108,6 +114,22 @@ class ProjectInstallTests(unittest.TestCase):
             self.run_install(success=False)
             self.assertFalse((self.root/'harness').exists())
             self.assertEqual(list(Path(outside).iterdir()),[])
+
+    def test_ignore_directory_function(self):
+        self.assertEqual(install_project.ignore_directory(Path('simple')), '/simple/')
+        self.assertEqual(install_project.ignore_directory(Path('nested/dir')), '/nested/dir/')
+        self.assertEqual(install_project.ignore_directory(Path('path/with*')), '/path/with\\*/')
+        self.assertEqual(install_project.ignore_directory(Path('path/with?')), '/path/with\\?/')
+        self.assertEqual(install_project.ignore_directory(Path('path/with[abc]')), '/path/with\\[abc\\]/')
+        self.assertEqual(install_project.ignore_directory(Path('path/with\\backslash')), '/path/with\\\\backslash/')
+
+        with self.assertRaises(ValueError) as context:
+            install_project.ignore_directory(Path('path/with\nbreak'))
+        self.assertIn('cannot contain line breaks', str(context.exception))
+
+        with self.assertRaises(ValueError) as context:
+            install_project.ignore_directory(Path('path/with\rbreak'))
+        self.assertIn('cannot contain line breaks', str(context.exception))
 
 
 if __name__ == '__main__':

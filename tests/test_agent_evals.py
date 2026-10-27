@@ -128,7 +128,8 @@ class AgentEvalsTest(unittest.TestCase):
     def test_optional_logger_fields_match_real_logger(self):
         c = self.case('steering')
         invalid = [{'conversation_id': ' padded '}, {'references_prior_sessions': [{}]},
-                   {'timestamp': '2026-10-23T00:00:00'}, {'timestamp': 'invalid'}]
+                   {'timestamp': '2026-10-23T00:00:00'}, {'timestamp': 'invalid'},
+                   {'timestamp': '2026-10-23T25:00:00Z'}]
         with tempfile.TemporaryDirectory() as tmp:
             directory = Path(tmp)
             config = directory / 'config.json'

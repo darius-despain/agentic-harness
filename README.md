@@ -80,12 +80,31 @@ python3 -m unittest discover -s tests -v
 ## Reusable skills
 
 - [Development](.agents/skills/harness-development-loop/SKILL.md): implement requested behavior, verify, report blockers.
-  - Optional [orchestrated mode](.agents/skills/harness-development-loop/references/orchestration.md): explicitly opt in to an Astra executive with one active Sol worker at a time, bounded verification/escalation and scoped cleanup. Role files provide prompts; the runtime selects models. Example: `$harness-development-loop orchestrated mode: fix <behavior> in <checkout>`.
+  - Optional [orchestrated mode](.agents/skills/harness-development-loop/references/orchestration.md) uses a Sol driver, bounded Terra/Luna execution workers, independent verification and scoped cleanup. Astra supplies a single tool-free advisory when escalation is warranted. Invoke with `$harness-development-loop orchestrated mode: fix <behavior> in <checkout>`.
 - [PR review](.agents/skills/harness-pr-review/SKILL.md): inspect PR/branch with an independent reviewer; recommend a merge decision. Posting requires authorization.
 - [Session evidence](.agents/skills/harness-session-evidence/SKILL.md): save/verify sanitized outcomes or recover source-backed context.
 - [Handoff](.agents/skills/harness-handoff/SKILL.md): private brief and copyable next-chat prompt; clarify materially different objectives. Local scoped commits may be appropriate; pushing requires an explicit request.
 - [Improvement](.agents/skills/harness-improvement-loop/SKILL.md): evidence-backed harness changes or an explicit no-gap result.
 - Invoke by natural language or `$harness-development-loop fix <behavior> in <checkout>`; substitute the relevant skill name/objective. Confirm the skill is loaded. Copy entire folders, preserving existing skills and references.
+
+## Tiered model routing
+
+- Tier 1 delegates mechanical work to `gpt-6.1-terra` or configured `gpt-6-luna`, with low reasoning, temperature 0.15, a 60-second worker timeout and bounded output.
+- Tier 2 runs the interactive driver on `gpt-6.1-sol` at medium reasoning. High/max require architectural refactoring, concurrency debugging or schema contract planning.
+- Tier 3 uses `gpt-6-astra` for one tool-free blueprint after two consecutive failures on the same task/file or spec, or for zero-context domain planning. Sol receives the handoff for implementation and verification.
+
+```bash
+python3 harness/model_routing.py --config harness-config.json check
+python3 harness/model_routing.py --config harness-config.json route orchestrator
+python3 harness/model_routing.py --config harness-config.json route verifier --parallel
+```
+
+The [routing reference](docs/model-routing.md) covers configuration, JSONL failure
+events, parallel worker adapters, the one-shot advisory transport and linked
+consumer commands. Hosts must enforce the requested controls. Current OpenAI API
+adapters must reject the low-reasoning-plus-temperature worker combination because
+the provider accepts temperature only with `reasoning.effort` set to `none`.
+[Official compatibility guidance](https://developers.openai.com/api/docs/guides/latest-model#update-api-and-model-parameters).
 
 ## Live global installation with symlinks
 

@@ -4,5 +4,12 @@
   "session_persistence_dir": "conversations",
   "audit_output_dir": "harness/reports",
   "max_age_days": 30,
-  "minimum_sessions": 2
+  "minimum_sessions": 2,
+  "model_routing": {
+    "orchestrator_model": "gpt-6.1-sol",
+    "subagent_worker_model": "gpt-6.1-terra",
+    "escalation_model": "gpt-6-astra",
+    "worker_temperature": 0.15,
+    "worker_timeout_seconds": 60
+  }
 }

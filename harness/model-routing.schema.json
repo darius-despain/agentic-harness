@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Harness model routing",
+  "description": "Optional model_routing object in harness-config.json. Environment model overrides undergo the same runtime validation.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "orchestrator_model": {"const": "gpt-6.1-sol", "default": "gpt-6.1-sol"},
+    "subagent_worker_model": {
+      "enum": ["gpt-6.1-terra", "gpt-6-luna"],
+      "default": "gpt-6.1-terra",
+      "description": "Every parallel worker uses this model. Astra is permitted exclusively through the single-turn advisory route."
+    },
+    "escalation_model": {"const": "gpt-6-astra", "default": "gpt-6-astra"},
+    "worker_temperature": {"type": "number", "minimum": 0.1, "maximum": 0.2, "default": 0.15},
+    "worker_timeout_seconds": {"type": "integer", "minimum": 1, "default": 60}
+  }
+}

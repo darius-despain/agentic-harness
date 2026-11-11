@@ -13,11 +13,11 @@ checks: [exact commands, cwd, expected behavior]
 limits: no journal/preflight/network Git/staging/commit; corrections<=2
 ```
 
-Return compactly: `track/attempt/status`, changed/new paths, criteria met/unmet, exact checks with exit codes and test counts, and blocker/failure category plus `file:line` citations. Preserve failure findings verbatim when resuming the same Implementer. Return no code or raw logs to Astra. Unknown facts stay unknown.
+Return compactly: `track/attempt/status`, changed/new paths, criteria met/unmet, exact checks with exit codes and test counts, and blocker/failure category plus `file:line` citations. Preserve compact failure findings when resuming the implementer. Identify the task and file or spec for failed tests. Keep raw logs out of the handoff.
 
 ## Verifier input and receipt
 
-The only task-specific inputs are **acceptance criteria, explicit owned paths, and specific validation commands** (each includes cwd/expected result). Role and inherited repository safety rules are fixed overhead. No implementation narrative, proposed diagnosis, executive history, journal, or repo-wide search. Inspect only `git diff -- <owned_files>` with literal explicit safe paths (disable external diff/textconv). For new files, use a disposable temporary index initialized from HEAD with intent-to-add for only owned new paths, then the same scoped diff; never modify the shared index. No blob inspection outside owned files. If more context is necessary, return the exact missing scope/check; Astra may issue a bounded revised contract, not an exploration mandate. Commands may execute project tests but must not mutate application files or access private contents as diagnostics.
+The only task-specific inputs are **acceptance criteria, explicit owned paths, and specific validation commands** (each includes cwd/expected result). Role and inherited repository safety rules are fixed overhead. No implementation narrative, proposed diagnosis, executive history, journal, or repo-wide search. Inspect only `git diff -- <owned_files>` with literal explicit safe paths (disable external diff/textconv). For new files, use a disposable temporary index initialized from HEAD with intent-to-add for only owned new paths, then the same scoped diff; never modify the shared index. No blob inspection outside owned files. If more context is necessary, return the exact missing scope/check; the driver may issue a bounded revised contract. Commands may execute project tests but must not mutate application files or access private contents as diagnostics.
 
 Passing receipt: **at most five lines**, one safety line and four check classes:
 
@@ -36,27 +36,38 @@ Rejection can exceed five lines only to provide compact actionable evidence:
 ```text
 track=T1 verdict=reject
 syntax=...; tests=...; service_health=...; user_flows=...
-failure: category=changed_code|existing_behavior|environment|credentials|external_dependency; certainty=confirmed|uncertain
+failure: task=<stable-id>; target=<file or spec>; category=changed_code|existing_behavior|environment|credentials|external_dependency; certainty=confirmed|uncertain
 evidence: <command/exit/counts, sanitized symptom, owned file:line if supported>
 unmet: <criterion>; next: <specific missing check/scope/prerequisite>
 ```
 
 Use the best-supported category and mark uncertainty explicitly; do not invent a root cause. Return exact findings for retry, no raw logs/diff. A scope or guard failure must also be reported, even when tests pass.
 
-## Investigator and cleanup
+## Investigation and escalation
 
 ```text
 investigate: track=T1; root=<path>; read=[bounded safe files]; failures=[exact findings]
-questions: [2–3 symptom/category-based reframings]; checks=[bounded reproductions]
-return: diagnosis=<supported|unresolved>; cause=<brief>; evidence=[file:line]; direction=<bounded fix>; prerequisite=<if any>
+extract: [requested interfaces or observed state]; checks=[bounded reproductions]
+return: task=<stable-id>; target=<file or spec>; evidence=[file:line and core error]; prerequisite=<if any>
 ```
 
-Read-only investigation grants no edits, cleanup, journal/preflight/network Git, or nested delegation. Supported direction is not implementation; unresolved diagnosis must not be presented as a verified fix.
+The Tier 1 investigator extracts evidence and exits after the assigned checks.
+
+```text
+escalate: task=<stable-id>; target=<file or spec>; trigger=<second same-target failure or zero-context architecture>
+error: <sanitized core error and expected behavior>
+interfaces: <relevant signatures and constraints>
+return: <supported cause and deterministic blueprint or isolated fix>; verify=<checks>
+```
+
+The driver sends a bounded packet through the tool-free, one-response Astra path. Omit execution history, verbose shell output, and raw diffs. The driver takes back control for edits and verification.
+
+## Cleanup
 
 ```text
 cleanup: track=T1; root=<path>; own=[exact files]; changed=[track-modified subset]
 entry=<HEAD/status/index metadata, authorized dirty preservation artifact>; new=[proven track-created files]
-save=.harness/handoffs/blocked-T1.patch; blocker=<brief>; mode=Sol-low
+save=.harness/handoffs/blocked-T1.patch; blocker=<brief>; mode=Tier-2-cleanup
 ```
 
 Cleanup returns exactly three lines:
@@ -71,24 +82,24 @@ Never claim preservation/restoration without evidence. No shared-index changes, 
 
 ## Session record and telemetry
 
-Only Astra invokes the logger and verifies the resulting JSONL. All required fields below are string lists except `session_id`; `validation_details` is optional structured metadata supported by the logger, not an auditor aggregation API.
+The Tier 2 driver invokes the logger and verifies the resulting JSONL. All required fields below are string lists except `session_id`; `validation_details` is optional structured metadata supported by the logger, not an auditor aggregation API.
 
 ```json
 {
   "session_id": "stable-session-id",
-  "workflow_insights": ["[ORCH_TELEMETRY] track=T1 | outcome=verified | spawns=Impl(Sol-Med):1,Ver(Sol-Med):1,Inv(Sol-High):0,Clean(Sol-Low):0 | cycles=0 | reframed=false"],
+  "workflow_insights": ["[ORCH_TELEMETRY] track=T1 | outcome=verified | spawns=Impl:1,Ver:1,Inv:0,Clean:0,Esc:0 | cycles=0 | escalated=false"],
   "changes_made": ["T1: observed resulting behavior"],
   "validation": ["syntax: outcome; tests: command/exit/counts; service_health: outcome; user_flows: outcome"],
   "blockers": [],
   "source_references": ["path/to/changed-file:12"],
-  "validation_details": {"orchestration": [{"track": "T1", "outcome": "verified", "spawns": {"implementer": 1, "verifier": 1, "investigator": 0, "cleanup": 0}, "cycles": 0, "reframed": false}]}
+  "validation_details": {"orchestration": [{"track": "T1", "outcome": "verified", "spawns": {"implementer": 1, "verifier": 1, "investigator": 0, "cleanup": 0, "escalation": 0}, "cycles": 0, "escalated": false}]}
 }
 ```
 
 Replace examples with actual observations/citations and one telemetry string per track, exactly:
 
 ```text
-[ORCH_TELEMETRY] track=<id> | outcome=<verified|blocked-reverted|escalated> | spawns=Impl(Sol-Med):<n>,Ver(Sol-Med):<n>,Inv(Sol-High):<n>,Clean(Sol-Low):<n> | cycles=<n> | reframed=<true|false>
+[ORCH_TELEMETRY] track=<id> | outcome=<verified|blocked-reverted|escalated> | spawns=Impl:<n>,Ver:<n>,Inv:<n>,Clean:<n>,Esc:<n> | cycles=<n> | escalated=<true|false>
 ```
 
-Count spawns, not resumptions; record correction cycles actually used (0–2). Use `escalated` for unresolved tracks without verified restoration; retain cleanup details and patch paths in `blockers`/structured metadata. No invented token savings, test results, or spawn counts.
+Count actual role starts and Astra requests. Record correction cycles actually used (0–2). Use the `escalated` outcome for unresolved tracks without verified restoration. Retain cleanup details and patch paths in `blockers` or structured metadata.

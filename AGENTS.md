@@ -11,6 +11,13 @@
 - Report syntax, tests, service health, and user-flow checks separately, with blockers. HTTP 200 does not verify authenticated behavior.
 - Before finishing, use configured logging when writable: stable `session_id`; string lists `workflow_insights`, `changes_made`, `validation`, `blockers`, `source_references`. Verify the saved record; disclose persistence failure. Logging/auditing require explicit invocation; no chat capture/scheduling occurs automatically.
 
+## Agent model routing
+
+- `ORCHESTRATOR_MODEL` defaults to `gpt-6.1-sol` at medium reasoning. The driver owns pairing, implementation, TDD, integrations, and code review. Use high or max reasoning only for refactors spanning architectural boundaries, complex concurrency or async debugging, or schema contract planning.
+- Delegate mechanical work such as linting, test execution, boilerplate, file scans, diff inspection, and log parsing to `SUBAGENT_WORKER_MODEL`. Use `gpt-6.1-terra` by default or explicitly configure `gpt-6-luna`. All parallel dispatches use the configured worker model, low reasoning, temperature 0.1–0.2, and an enforced timeout. Workers return compact diffs or findings and exit immediately after their assigned checks complete.
+- Count consecutive failures against the same task and file or spec. On the second failed test or repeated fix, or when starting a zero-context architecture, the driver may request one `ESCALATION_MODEL` (`gpt-6-astra`) advisory response. Pass only the core error, relevant interfaces, and constraints. Astra has no tools, write access, shell, or delegation. The driver takes back control to implement and verify the blueprint or isolated fix.
+- Use runtime controls to enforce model, reasoning, time limits, and tool access. If a required control is unavailable, report the affected route as unavailable and continue independently where possible. Keep the scoped [orchestration protocol](.agents/skills/harness-development-loop/references/orchestration.md) for opted-in sessions.
+
 ## Git workflow
 
 - For branches, commits, publication, or clean handoff, read `.agents/skills/harness-development-loop/references/git-workflow.md` (installed global equivalent if absent). Inspect actual repository/branch and submodules; stage intended paths only; verify remote results. Connector publication requires commit-history comparison before claiming synchronization. Account for private configuration without reading/copying it.

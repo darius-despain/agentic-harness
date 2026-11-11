@@ -1,25 +1,14 @@
 {
   "profiles": [
     {
-      "id": "candidate-medium",
+      "id": "sol-medium",
       "backend": "command",
       "command": [
         "python3",
         "/absolute/path/to/your_adapter.py"
       ],
-      "model": "EXACT_RUNTIME_MODEL_ID",
+      "model": "gpt-6.1-sol",
       "reasoning": "medium",
-      "seed": null
-    },
-    {
-      "id": "candidate-high",
-      "backend": "command",
-      "command": [
-        "python3",
-        "/absolute/path/to/your_adapter.py"
-      ],
-      "model": "EXACT_RUNTIME_MODEL_ID",
-      "reasoning": "high",
       "seed": null
     }
   ],
@@ -27,9 +16,9 @@
     "failure"
   ],
   "repetitions": 2,
-  "max_runs": 4,
-  "max_external_calls": 24,
+  "max_runs": 2,
+  "max_external_calls": 12,
   "case_timeout_seconds": 60,
-  "max_cost_usd": 0.24,
+  "max_cost_usd": 0.12,
   "per_call_cost_ceiling_usd": 0.01
 }

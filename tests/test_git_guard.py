@@ -170,6 +170,30 @@ class GuardTests(unittest.TestCase):
         self.assertIn("Co-authored by: Test Agent (AI)", committed.splitlines())
         self.assertNotIn("ignored tail", committed)
 
+    def test_surviving_commit_message_standalone(self):
+        message = "line 1\n# comment\nline 2\n"
+        result = guard.surviving_commit_message(message)
+        self.assertEqual(result, "line 1\nline 2\n")
+
+        scissors = "line 1\n# ------------------------ >8 ------------------------\nignored\n"
+        result = guard.surviving_commit_message(scissors)
+        self.assertEqual(result, "line 1\n")
+
+        with patch.object(guard.subprocess, "run", side_effect=OSError("mock error")):
+            with self.assertRaisesRegex(ValueError, "commit-message cleanup inspection unavailable"):
+                guard.surviving_commit_message("test")
+
+        def mock_run(args, **kwargs):
+            if args[:2] == ["git", "config"]:
+                return subprocess.CompletedProcess(args, 0, stdout=";\n")
+            if args[:2] == ["git", "stripspace"]:
+                return subprocess.CompletedProcess(args, 1)
+            return subprocess.CompletedProcess(args, 0, stdout="")
+
+        with patch.object(guard.subprocess, "run", side_effect=mock_run):
+            with self.assertRaisesRegex(ValueError, "commit-message cleanup failed"):
+                guard.surviving_commit_message("test")
+
     def test_unreadable_message_diagnostics_do_not_echo_decoder_details(self):
         message = self.repo / "message.txt"
         message.write_bytes(b"\xff private-message-fixture")

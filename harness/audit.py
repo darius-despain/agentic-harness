@@ -81,7 +81,7 @@ def collect(config, now):
                     raise ValueError("workflow_insights must be a list of strings")
                 if not cutoff <= date <= now:
                     continue
-                for insight in dict.fromkeys(i.strip() for i in insights if i.strip()):
+                for insight in dict.fromkeys(filter(None, map(str.strip, insights))):
                     entry = grouped[insight]
                     entry["sessions"].add(identity)
                     evidence = {"source": source, "session_id": session, "timestamp": record["timestamp"]}
@@ -89,7 +89,14 @@ def collect(config, now):
                         evidence["conversation_id"] = record["conversation_id"]
                     entry["evidence"].append(evidence)
                 for reference in record.get("references_prior_sessions", []):
-                    if not isinstance(reference, str) or not (root / reference).resolve().is_relative_to(root) or not (root / reference).is_file():
+                    if not isinstance(reference, str):
+                        warnings.append(f"{source}: unresolved reference {reference!r}")
+                        continue
+                    try:
+                        ref_path = (root / reference).resolve()
+                        if not ref_path.is_relative_to(root) or not ref_path.is_file():
+                            warnings.append(f"{source}: unresolved reference {reference!r}")
+                    except (RuntimeError, ValueError, OSError):
                         warnings.append(f"{source}: unresolved reference {reference!r}")
             except (ValueError, KeyError, TypeError, AttributeError) as error:
                 warnings.append(f"{source}: {error}")

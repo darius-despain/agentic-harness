@@ -60,7 +60,7 @@ python3 harness/audit.py --config harness-config.json log --record session-recor
 ```
 
 - Read back the exclusive JSONL output before claiming persistence. Existing records remain untouched. Never include credentials, raw transcripts, or sensitive personal data.
-- Use string lists for all fields above except `session_id`; structured checks belong in optional `validation_details`.
+- Use string lists for all fields above except `session_id`. Keep each list to three items and each string to 120 characters.
 - Reuse the session ID across checkpoints. Optional nonempty, unpadded `conversation_id` groups distinct phase IDs; `phase` is metadata. No legacy suffix inference or rewriting occurs.
 - `references_prior_sessions` names existing journal files; external file/line and chat/turn citations belong in `source_references`.
 

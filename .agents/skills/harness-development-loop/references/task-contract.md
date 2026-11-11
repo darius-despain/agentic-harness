@@ -82,7 +82,7 @@ Never claim preservation/restoration without evidence. No shared-index changes, 
 
 ## Session record and telemetry
 
-The Tier 2 driver invokes the logger and verifies the resulting JSONL. All required fields below are string lists except `session_id`; `validation_details` is optional structured metadata supported by the logger, not an auditor aggregation API.
+The Tier 2 driver invokes the logger and verifies the saved record. Use at most three entries per list and at most 120 characters per string. Keep the required fields as string lists and use no custom nested objects.
 
 ```json
 {
@@ -91,15 +91,14 @@ The Tier 2 driver invokes the logger and verifies the resulting JSONL. All requi
   "changes_made": ["T1: observed resulting behavior"],
   "validation": ["syntax: outcome; tests: command/exit/counts; service_health: outcome; user_flows: outcome"],
   "blockers": [],
-  "source_references": ["path/to/changed-file:12"],
-  "validation_details": {"orchestration": [{"track": "T1", "outcome": "verified", "spawns": {"implementer": 1, "verifier": 1, "investigator": 0, "cleanup": 0, "escalation": 0}, "cycles": 0, "escalated": false}]}
+  "source_references": ["path/to/changed-file:12"]
 }
 ```
 
-Replace examples with actual observations/citations and one telemetry string per track, exactly:
+Replace examples with actual observations and citations. Use short IDs and the telemetry format below for recorded tracks, within the list and string limits.
 
 ```text
 [ORCH_TELEMETRY] track=<id> | outcome=<verified|blocked-reverted|escalated> | spawns=Impl:<n>,Ver:<n>,Inv:<n>,Clean:<n>,Esc:<n> | cycles=<n> | escalated=<true|false>
 ```
 
-Count actual role starts and Astra requests. Record correction cycles actually used (0–2). Use the `escalated` outcome for unresolved tracks without verified restoration. Retain cleanup details and patch paths in `blockers` or structured metadata.
+Count actual role starts and Astra requests. Record correction cycles actually used (0–2). Use the `escalated` outcome for unresolved tracks without verified restoration. Retain cleanup details and patch paths in the compact `blockers` string list.

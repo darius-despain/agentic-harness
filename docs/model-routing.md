@@ -3,7 +3,7 @@
 This is an optional **Codex-specific** integration. Load or invoke it only when
 tiered routing or orchestrated mode is explicitly enabled. Selecting a tool profile
 alone preserves the current runtime settings and does not run the router. Other
-profiles use their native capabilities without these OpenAI model requirements.
+profiles use their native capabilities without these OpenAI model requirements. Antigravity sessions should use [harness/profiles/antigravity.md](../harness/profiles/antigravity.md) for UI model economics and native `invoke_subagent` tiers.
 
 ## Driver and worker policy
 

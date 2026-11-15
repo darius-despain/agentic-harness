@@ -52,7 +52,7 @@ git clone https://github.com/darius-despain/agentic-harness.git
 cd agentic-harness
 ```
 
-- Project-local setup: follow the [full harness procedure](docs/agent-tools.md#install-or-upgrade-a-full-harness) to copy skills/shared assets and merge native entrypoints while preserving existing instructions. Configure the logger separately with the template or project installer.
+- Project-local setup: follow the [full harness procedure](docs/agent-tools.md#install-or-upgrade-a-full-harness) to copy skills/shared assets and merge native entrypoints while preserving existing instructions. If adopting the Markdown task pilot, also copy `templates/roadmap.md` and `templates/task.md` so its links resolve. Configure the logger separately with the template or project installer.
 - Global setup: inspect the [link installer procedure](docs/installation-and-git.md#live-global-installation-with-symlinks) first; it replaces global instructions/skills and links personal configuration. Every consumer still needs its own config/journal.
 - Logger-only installation: use [preview/apply](docs/project-setup.md); `install_project.py` installs `audit.py` and config, not skills, instructions, preflight, or guards.
 - Copied installations require reviewed upgrades; symlinks use the live source. Preserve consumer configuration and instructions.
@@ -84,7 +84,7 @@ python3 harness/audit.py --config harness-config.json log --record session-recor
 ```
 
 - Read back the exclusive JSONL output before claiming persistence. Existing records remain untouched. Never include credentials, raw transcripts, or sensitive personal data.
-- Use string lists for all fields above except `session_id`; structured checks belong in optional `validation_details`.
+- Use string lists for all fields above except `session_id`. Keep each list to three items and each string to 120 characters.
 - Reuse the session ID across checkpoints. Optional nonempty, unpadded `conversation_id` groups distinct phase IDs; `phase` is metadata. No legacy suffix inference or rewriting occurs.
 - `references_prior_sessions` names existing journal files; external file/line and chat/turn citations belong in `source_references`.
 
@@ -104,12 +104,34 @@ python3 -m unittest discover -s tests -v
 ## Reusable skills
 
 - [Development](.agents/skills/harness-development-loop/SKILL.md): implement requested behavior, verify, report blockers.
-  - Optional Codex-specific [orchestrated mode](.agents/skills/harness-development-loop/references/orchestration.md): explicitly opt in to one active worker at a time, bounded verification/escalation and scoped cleanup. Its model/control requirements are separate from tool selection. Example: `$harness-development-loop orchestrated mode: fix <behavior> in <checkout>`. Other profiles retain the portable single-agent loop unless supported native delegation is explicitly established.
+  - Optional Codex-specific [orchestrated mode](.agents/skills/harness-development-loop/references/orchestration.md) uses the configured Sol driver, bounded Terra/Luna mechanical workers, independent verification and scoped cleanup. Astra provides a single tool-free advisory at its trigger. These routing controls are separate from tool selection. Invoke with `$harness-development-loop orchestrated mode: fix <behavior> in <checkout>`. Other profiles retain the portable single-agent loop unless supported native delegation is explicitly established.
 - [PR review](.agents/skills/harness-pr-review/SKILL.md): inspect PR/branch with an independent reviewer; recommend a merge decision. Posting requires authorization.
 - [Session evidence](.agents/skills/harness-session-evidence/SKILL.md): save/verify sanitized outcomes or recover source-backed context.
 - [Handoff](.agents/skills/harness-handoff/SKILL.md): private brief and copyable next-chat prompt; clarify materially different objectives. Local scoped commits may be appropriate; pushing requires an explicit request.
 - [Improvement](.agents/skills/harness-improvement-loop/SKILL.md): evidence-backed harness changes or an explicit no-gap result.
 - Invoke by natural language or `$harness-development-loop fix <behavior> in <checkout>`; substitute the relevant skill name/objective. Confirm the skill is loaded. Copy entire folders, preserving existing skills and references.
+
+## Tiered model routing
+
+Optional Codex-specific routing is separate from selecting a tool profile. It
+preserves the existing router and config defaults without running them at startup.
+
+- Tier 1 delegates mechanical work to `gpt-6.1-terra` or configured `gpt-6-luna`, with low reasoning, temperature 0.15, a 60-second worker timeout and bounded output.
+- Tier 2 runs the interactive driver on `gpt-6.1-sol` at medium reasoning. High/max require architectural refactoring, concurrency debugging or schema contract planning.
+- Tier 3 uses `gpt-6-astra` for one tool-free blueprint after two consecutive failures on the same task/file or spec, or for zero-context domain planning. Sol receives the handoff for implementation and verification.
+
+```bash
+python3 harness/model_routing.py --config harness-config.json check
+python3 harness/model_routing.py --config harness-config.json route orchestrator
+python3 harness/model_routing.py --config harness-config.json route verifier --parallel
+```
+
+The [routing reference](docs/model-routing.md) covers configuration, JSONL failure
+events, parallel worker adapters, the one-shot advisory transport and linked
+consumer commands. Hosts must enforce the requested controls. Current OpenAI API
+adapters must reject the low-reasoning-plus-temperature worker combination because
+the provider accepts temperature only with `reasoning.effort` set to `none`.
+[Official compatibility guidance](https://developers.openai.com/api/docs/guides/latest-model#update-api-and-model-parameters).
 
 ## Live global installation with symlinks
 

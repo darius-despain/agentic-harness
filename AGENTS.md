@@ -13,6 +13,7 @@
 ## Keep startup small
 
 - Default to one agent using the runtime's current model/settings. Do not load other profiles, role prompts, orchestration references, old journals, or run network/readiness checks at startup.
+- For new tasks, load [the Markdown task pilot](harness/TASKS.md); keep existing owner approvals and current task scope across turns. Load its templates only when planning a task.
 - Load just the relevant workflow from `.agents/skills/` when needed. If native skill discovery is unavailable, read its `SKILL.md` directly; `$skill-name` syntax is optional UI sugar. Do not read `agents/openai.yaml` outside a supporting UI.
 - Multi-agent orchestration is a separate explicit opt-in, never implied by tool selection. Do not change models, reasoning settings, plans, or native approval settings merely to match this harness.
 - For terminal selection, run `python3 harness/session.py --root /absolute/project` (or the absolute installed script path). It prompts in a terminal; unattended runs must pass `--tool` or have a saved choice. It prints the minimal files to load; it does not launch an agent or inject instructions.

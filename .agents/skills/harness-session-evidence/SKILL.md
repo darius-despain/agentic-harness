@@ -22,7 +22,7 @@ description: Save or inspect sanitized project session journals for cross-sessio
   - Optional `conversation_id`: actual shared chat ID, nonempty/unpadded; groups distinct phase IDs. Otherwise grouping uses unchanged `session_id`; never infer/strip legacy suffixes. Optional `phase` is metadata.
   - Required string lists: `workflow_insights` (direct observations only), `changes_made` (actual actions/paths), `validation` (performed checks/results, failures/unverified flows), `blockers` (dependencies/next action), `source_references` (external chat/turn or file/line citations; empty allowed).
   - **Output Token Diet:** Maximum **3 items** per array, maximum **120 characters** per string entry. Ban custom nested objects.
-  - Optional `references_prior_sessions`: existing filenames in this journal only. Structured checks belong in optional `validation_details`, never `validation`.
+  - Optional `references_prior_sessions`: existing filenames in this journal only, within the list and string limits.
   - Optional `timestamp`: timezone-aware ISO 8601; omitted means current UTC.
 - Exclude inherited proposals/generated report text, secrets, device codes, raw environment/transcripts, sensitive personal data.
 - From project root, run `check` before logging:

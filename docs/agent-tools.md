@@ -124,6 +124,8 @@ changing. For another project:
    packages. Exclude private reports. Preserve customized files and review
    differences instead of overwriting them. `session.py`, `CORE.md` and `profiles/`
    travel together; the CLI errors on incomplete installations.
+   For the Markdown task pilot, also copy `templates/roadmap.md` and
+   `templates/task.md`; the lazy `harness/TASKS.md` workflow references them.
 3. Merge this root `AGENTS.md` startup procedure into project instructions. Shared
    paths must resolve to the copied harness. Keep project build/test and safety rules.
 4. Add the `CLAUDE.md` bridge and/or `.agent/rules/harness.md` for tools you use;
@@ -148,6 +150,12 @@ On upgrades, review/copy new shared assets before updating the entrypoint. Exist
 logger config and journals need no migration. Repair incomplete installations
 instead of silently selecting another tool. Shared checkout edits may affect all
 symlink consumers; keep personal preferences in each consumer.
+
+The Markdown task pilot and teammate-request format remain shared policies.
+Load `harness/TASKS.md` and planning templates only when planning a new task;
+existing owner approvals persist across turns. Optional tiered model routing and
+its configuration remain available for explicitly enabled Codex workflows. Other
+profiles do not load that policy or adopt its model names.
 
 ## Smoke checks and limits
 

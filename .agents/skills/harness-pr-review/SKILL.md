@@ -19,9 +19,9 @@ description: Review a PR or branch with a dedicated agent and give an approve or
 
 ## Delegate and verify
 
-- Launch one independent reviewer with the full [reviewer prompt](agents/pr-reviewer.md). Supply repository/absolute checkout/skill directory/instructions, PR, immutable SHAs, mode/intended behavior, filenames/exclusions, access/validation limits, raw artifacts/read routes and safe commands. Include prior findings/revisions or related PR contracts as applicable; prohibit source/external writes.
+- Launch one independent reviewer with the full [reviewer prompt](agents/pr-reviewer.md). When optional Codex tiered routing is enabled, use its Tier 2 reviewer at medium reasoning; other profiles use supported native review controls. Supply repository/absolute checkout/skill directory/instructions, PR, immutable SHAs, mode/intended behavior, filenames/exclusions, access/validation limits, raw artifacts/read routes and safe commands. Include prior findings/revisions or related PR contracts as applicable; prohibit source/external writes.
 - Reviewer independently inspects diff/surrounding code; do not bias its verdict. Wait, then verify candidates against head, callers, base, safeguards and requirements. Resolve disagreement by evidence; discard unsupported/duplicate claims. Adversarial review has no defect quota.
-- `agents/openai.yaml` is UI metadata; reviewer Markdown is a portable prompt, not native registration. If delegation is unavailable, disclose and apply it yourself; never claim independence.
+- The runtime selects the model and reasoning effort. Only when optional Codex tiered routing is enabled, use `ORCHESTRATOR_MODEL` for the serial reviewer and `SUBAGENT_WORKER_MODEL` at low effort for separate parallel scans or test jobs. Other profiles keep native settings and do not load Codex routing. `agents/openai.yaml` is UI metadata, not worker registration. If independent review is unavailable, disclose the limitation and apply the prompt locally; never claim independence.
 - Inspect actual CI job contents; dependency audits do not prove behavior tests. Separate tracing, reproducers, local tests, CI and authenticated flows. Use nonsecret fixtures. If blocked, inspect immutable connector content/isolated matching snapshots and identify revision/checks; proposed tests/unapplied patches were not tested.
 
 ## Return a decision

@@ -1,4 +1,4 @@
 interface:
   display_name: "Harness Development Loop"
-  short_description: "Implement, test, fix, and record development work"
-  default_prompt: "Use $harness-development-loop to complete this software change and verify the result."
+  short_description: "Implement and verify changes with tiered model routing"
+  default_prompt: "Use $harness-development-loop to complete and verify this change with the Tier 2 driver. Route mechanical tasks to Tier 1 workers and use a tool-free Tier 3 advisory response only when the escalation trigger applies."

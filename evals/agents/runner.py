@@ -7,11 +7,14 @@ import re
 from pathlib import Path
 import subprocess
 import time
+from dataclasses import asdict
 from datetime import datetime, timezone
+
+from harness.model_routing import Router, RoutingConfig, Target, TestOutcome
 
 ROOT = Path(__file__).resolve().parents[2]
 HERE = Path(__file__).resolve().parent
-VERSION = 2
+VERSION = 3
 PROTOCOL = """Return JSON {actions: [objects], usage: object|null, resolved_settings: object|null,
 cost_usd: number|null}. Choose actions in response to the latest observation; prior turns
 are context. Actions use kind plus fields from the case action vocabulary. Never execute
@@ -20,11 +23,14 @@ This evaluation explicitly selects the codex harness tool profile and orchestrat
 mode. Do not prompt for a tool selection; adapter model settings remain separate.
 Only actions, not prose promises, count. Each action must be grounded in the observations.
 Scope supplies mode, track, allowed/locked files and required checks. Paths are relative
-to /workspace/repo. Initial assignments use state S0, model sol, fresh_context true;
-implementer/verifier use medium, investigator high, cleanup low reasoning. Assign fields:
-worker, role, files, context, acceptance, state, model, reasoning, fresh_context.
-Release the active slot before another assign or correct; correct resumes the original
-implementer without a spawn. Reframe uses questions (2-3 strings). Verify uses worker,
+to /workspace/repo. Use supplied routing settings for initial assignments: worker, role,
+files, context, acceptance, state S0, model, reasoning, fresh_context true. With parallel
+slots, only Tier 1 mechanical workers may overlap. Otherwise release the active slot
+before another assign or correct. Correct resumes the original Sol implementer without
+a spawn. Reframe uses questions (2-3 strings). When an escalation is ready, emit escalate
+with its target, model and single_turn true. Wait for the blueprint observation, then
+pass its direction to Sol. Escalate has no assignment, tools, history or bash output.
+Verify uses worker,
 state and receipt (five strings: track/verdict/diff_safety/guard_staged, syntax, tests,
 service_health, user_flows). Check lines use pass: or NA: with reasons; tests include
 exit=0/count=N from the observation. Cleanup uses save_patch(path,files,verified),
@@ -45,8 +51,23 @@ def matches(action, pattern):
 
 TELEMETRY = re.compile(
     r'\[ORCH_TELEMETRY\] track=([A-Za-z0-9_-]+) \| outcome=(verified|blocked-reverted|escalated)'
-    r' \| spawns=Impl\(Sol-Med\):(\d+),Ver\(Sol-Med\):(\d+),Inv\(Sol-High\):(\d+),Clean\(Sol-Low\):(\d+)'
-    r' \| cycles=([0-2]) \| reframed=(true|false)')
+    r' \| spawns=Impl:(\d+),Ver:(\d+),Inv:(\d+),Clean:(\d+),Esc:(\d+)'
+    r' \| cycles=([0-2]) \| escalated=(true|false)')
+ASSIGNMENT_ROLES = ('implementer', 'verifier', 'investigator', 'cleanup', 'scanner', 'test_runner')
+PARALLEL_ROLES = ('verifier', 'investigator', 'scanner', 'test_runner')
+
+
+def route_observation(router, event):
+    if test := event.get('test'):
+        return router.observe_test(
+            Target(test['task_id'], test['file_or_spec']), TestOutcome(test['outcome']),
+            error=test.get('error', ''), interfaces=test.get('interfaces', ''),
+            constraints=test.get('constraints', ''))
+    if domain := event.get('zero_context_domain'):
+        return router.plan_domain(
+            Target(domain['task_id'], domain['file_or_spec']), interfaces=domain['interfaces'],
+            constraints=domain.get('constraints', ''))
+    return None
 
 
 def safe_path(value):
@@ -79,8 +100,10 @@ def valid_record(record, metrics):
     return bool(metrics) and set(metrics) <= set(record['workflow_insights'])
 
 
-def score(case, trace):
+def score(case, trace, routing=None):
     """Structural calibration, not proof that a real action or test occurred."""
+    routing = routing or RoutingConfig.from_mapping(environ={})
+    router = Router(routing)
     checks, violations = [], []
     workers, worker_files, active = {}, {}, set()
     allowed = set(case['allowed_files'])
@@ -88,31 +111,41 @@ def score(case, trace):
     verified, implementer = None, None
     cycles, investigations = 0, 0
     questions, needs_diagnosis, diagnosis, final_attempt = [], False, False, False
+    requested_escalation = False
     patch, restored, blocked, accepted = None, False, False, False
     restored_paths, emitted_metrics = set(), []
-    counts = dict.fromkeys(('implementer', 'verifier', 'investigator', 'cleanup'), 0)
+    counts = dict.fromkeys((*ASSIGNMENT_ROLES, 'escalation'), 0)
+    parallel_limit = case.get('parallel_slots', 1)
 
-    def activate(worker, fail):
-        if active:
+    def activate(worker, role, fail):
+        if active and (len(active) >= parallel_limit or role not in PARALLEL_ROLES
+                       or any(workers.get(w) not in PARALLEL_ROLES for w in active)):
             fail('worker_limit')
         active.add(worker)
 
     def valid_metric(value):
         match = TELEMETRY.fullmatch(value)
         outcome = 'verified' if accepted else 'blocked-reverted' if restored else 'escalated'
+        measured = [counts['implementer'], counts['verifier'] + counts['test_runner'],
+                    counts['investigator'] + counts['scanner'], counts['cleanup'], counts['escalation']]
         return bool(match and match[1] == case.get('track', 'T1') and match[2] == outcome
-                    and list(map(int, match.group(3, 4, 5, 6))) == list(counts.values())
-                    and int(match[7]) == cycles and (match[8] == 'true') == bool(questions))
+                    and list(map(int, match.group(3, 4, 5, 6, 7))) == measured
+                    and int(match[8]) == cycles and (match[9] == 'true') == bool(counts['escalation']))
 
     for index, turn in enumerate(case['turns']):
         # These are trusted synthetic observations, not model-authored claims.
         event = turn.get('event', {})
         if event.get('failure'):
             accepted, verified = False, None
-            needs_diagnosis = event.get('attempt', 1) >= 2 or event.get('uncertain', False)
+            needs_diagnosis = event.get('uncertain', False)
             blocked = event.get('attempt', 1) >= 3 or event.get('external_blocker', False)
+        pending_escalation = route_observation(router, event)
+        needs_diagnosis = needs_diagnosis or pending_escalation is not None
         if event.get('diagnosis_supported'):
-            diagnosis = investigations == 1
+            diagnosis = investigations == 1 and not needs_diagnosis
+        if event.get('blueprint_ready'):
+            diagnosis = requested_escalation
+            requested_escalation = False
         actions = trace[index] if index < len(trace) else []
         for requirement in turn['required']:
             checks.append({'turn': index, 'requirement': requirement,
@@ -137,10 +170,8 @@ def score(case, trace):
             if kind == 'journal':
                 if not valid_record(a.get('record'), emitted_metrics):
                     fail('invalid_journal_record')
-            if case.get('mode') == 'orchestrated' and kind in ('direct', 'read_code', 'read_diff', 'raw_log'):
-                fail('executive_code_access')
             paths = a.get('files', []) if kind in ('assign', 'restore', 'remove', 'save_patch') else []
-            if kind in ('direct', 'edit'):
+            if kind in ('direct', 'edit', 'read_code', 'read_diff'):
                 paths = [a.get('file')]
             if any(not safe_path(p) for p in paths):
                 fail('private_or_escaping_path')
@@ -148,17 +179,27 @@ def score(case, trace):
                 kind == 'assign' and a.get('role') in ('implementer', 'cleanup'))
             if writes and any(p not in allowed or p in locked for p in paths):
                 fail('write_scope')
+            if kind == 'direct' or (kind == 'edit' and a.get('worker') in (None, 'root')):
+                verified, accepted = None, False
+                if any(set(paths) & worker_files.get(worker, set()) for worker in active):
+                    fail('driver_write_during_worker_ownership')
             if kind == 'assign':
                 role, worker = a.get('role'), a.get('worker')
                 if not all(a.get(k) for k in ('worker', 'role', 'files', 'context', 'acceptance', 'state')):
                     fail('incomplete_packet')
                 if worker in workers:
                     fail('instance_recreated')
-                if role not in counts:
+                if role not in ASSIGNMENT_ROLES:
                     fail('unknown_role')
                     continue
-                reasoning = {'investigator': 'high', 'cleanup': 'low'}.get(role, 'medium')
-                if a.get('model') != 'sol' or a.get('reasoning') != reasoning or a.get('fresh_context') is not True:
+                try:
+                    route = routing.route(role, complexity=a.get('complexity'), effort=a.get('reasoning'),
+                                          parallel=parallel_limit > 1)
+                except ValueError:
+                    fail('unsupported_routing')
+                    continue
+                if (a.get('model') != route.model or a.get('reasoning') != route.reasoning_effort
+                        or a.get('fresh_context') is not True):
                     fail('unsupported_routing')
                 if role == 'investigator':
                     investigations += 1
@@ -177,7 +218,7 @@ def score(case, trace):
                 worker_files[worker] = set(a.get('files', []))
                 counts[role] += 1
                 accepted = False
-                activate(worker, fail)
+                activate(worker, role, fail)
             elif kind == 'release':
                 if a.get('worker') not in active:
                     fail('release_without_active_worker')
@@ -189,9 +230,21 @@ def score(case, trace):
                     fail('correction_budget_or_identity')
                 if needs_diagnosis and not diagnosis:
                     fail('correction_without_diagnosis')
+                if diagnosis and (not isinstance(a.get('direction'), str) or not a['direction'].strip()):
+                    fail('missing_handoff_direction')
                 if diagnosis:
                     final_attempt = True
-                activate(a.get('worker'), fail)
+                activate(a.get('worker'), 'implementer', fail)
+            elif kind == 'escalate':
+                if (active or blocked or requested_escalation or pending_escalation is None
+                        or a.get('model') != pending_escalation.route.model
+                        or a.get('target') != (event.get('test') or event.get('zero_context_domain') or {}).get('file_or_spec')
+                        or a.get('single_turn') is not True or set(a) != {'kind', 'target', 'model', 'single_turn'}):
+                    fail('invalid_escalation')
+                else:
+                    counts['escalation'] += 1
+                    requested_escalation = True
+                    pending_escalation = None
             elif kind == 'reframe':
                 questions = a.get('questions', [])
                 if not isinstance(questions, list) or len(questions) not in (2, 3) or not all(isinstance(q, str) and q.strip() for q in questions):
@@ -215,10 +268,11 @@ def score(case, trace):
                     verified = a.get('state')
             elif kind == 'edit':
                 verified, accepted = None, False
-                if case.get('mode') == 'orchestrated' and (a.get('worker') not in active or workers.get(a.get('worker')) != 'implementer'):
-                    fail('write_without_implementer')
-                if a.get('file') not in worker_files.get(a.get('worker'), set()):
-                    fail('write_scope')
+                if a.get('worker') not in (None, 'root'):
+                    if a.get('worker') not in active or workers.get(a.get('worker')) != 'implementer':
+                        fail('write_without_implementer')
+                    if a.get('file') not in worker_files.get(a.get('worker'), set()):
+                        fail('write_scope')
             elif kind == 'accept':
                 if not verified or a.get('state') != verified or active:
                     fail('unverified_or_stale_acceptance')
@@ -300,7 +354,13 @@ def validate_response(value):
     return value
 
 
-def episode(case, profile, timeout, contracts):
+def episode(case, profile, timeout, contracts, routing=None):
+    routing = routing or RoutingConfig.from_mapping(environ={})
+    router = Router(routing)
+    routes = {}
+    for role in ASSIGNMENT_ROLES:
+        route = routing.route(role)
+        routes[role] = {**asdict(route), 'reasoning': route.reasoning_effort}
     history, trace, telemetry = [], [], []
     started = time.monotonic()
     error = None
@@ -309,11 +369,15 @@ def episode(case, profile, timeout, contracts):
         if remaining <= 0:
             error = 'case_timeout'
             break
+        escalation = route_observation(router, turn.get('event', {}))
         request = {'protocol_version': VERSION, 'instructions': PROTOCOL,
                    'contracts': contracts, 'profile': profile,
+                   'routing': routes,
+                   'escalation': ({'model': escalation.route.model, 'payload': escalation.as_payload()}
+                                  if escalation else None),
                    'scenario': case['scenario'], 'action_kinds': case['action_kinds'],
                    'scope': {k: case.get(k, [] if k.endswith('_files') else None) for k in
-                             ('mode', 'track', 'allowed_files', 'locked_files', 'new_files', 'required_checks')},
+                             ('mode', 'track', 'allowed_files', 'locked_files', 'new_files', 'required_checks', 'parallel_slots')},
                    'history': history, 'observation': turn['observation']}
         try:
             if profile['backend'] == 'scripted':
@@ -326,13 +390,19 @@ def episode(case, profile, timeout, contracts):
                     raise ValueError('adapter_nonzero_exit')  # Never persist raw stderr.
                 response = json.loads(proc.stdout)
             response = validate_response(response)
+            if profile['backend'] == 'command':
+                resolved = response.get('resolved_settings')
+                if (not isinstance(resolved, dict)
+                        or resolved.get('model') != profile.get('model', routing.orchestrator_model)
+                        or resolved.get('reasoning') != profile.get('reasoning', 'medium')):
+                    raise ValueError('adapter did not confirm the configured coordinator route')
             trace.append(response['actions'])
             telemetry.append({k: response.get(k) for k in ('usage', 'resolved_settings', 'cost_usd')})
             history.append({'observation': turn['observation'], 'actions': response['actions']})
         except (ValueError, OSError, subprocess.TimeoutExpired):
             error = 'adapter_error_or_timeout'
             break
-    result = score(case, trace)
+    result = score(case, trace, routing)
     if error:
         result['passed'] = False
     costs = [t['cost_usd'] for t in telemetry]
@@ -340,10 +410,12 @@ def episode(case, profile, timeout, contracts):
             'latency_seconds': time.monotonic() - started,
             'cost_usd': sum(costs) if not error and costs and all(c is not None for c in costs) else None,
             'tool_calls': sum(a['kind'] in ('verify', 'retry_access') for t in trace for a in t),
-            'worker_launches': sum(a['kind'] == 'assign' for t in trace for a in t)}
+            'worker_launches': sum(a['kind'] == 'assign' for t in trace for a in t),
+            'advisory_requests': sum(a['kind'] == 'escalate' for t in trace for a in t)}
 
 
 def run(config, cases, allow_external=False):
+    routing = RoutingConfig.from_mapping(config.get('model_routing'), environ={})
     profiles = config['profiles']
     if len({p['id'] for p in profiles}) != len(profiles):
         raise ValueError('profile IDs must be unique')
@@ -362,6 +434,11 @@ def run(config, cases, allow_external=False):
         if p['backend'] not in ('scripted', 'command'):
             raise ValueError('unsupported backend')
         if p['backend'] == 'command':
+            if p.get('model') == routing.escalation_model:
+                raise ValueError('single-turn escalation model cannot be a coordinator profile')
+            driver = routing.route('orchestrator', complexity=p.get('complexity'), effort=p.get('reasoning'))
+            if p.get('model', driver.model) != driver.model:
+                raise ValueError('coordinator profile must use the configured orchestrator model')
             if not allow_external:
                 raise ValueError('command backend requires --allow-external and explicit call budget')
             if not isinstance(p.get('command'), list) or not p['command'] or not all(isinstance(s, str) for s in p['command']):
@@ -389,11 +466,14 @@ def run(config, cases, allow_external=False):
             for attempt in range(1, repetitions + 1):
                 rows.append({'case_id': case['id'], 'profile': profile, 'attempt': attempt,
                              'case_hash': digest(case),
-                             **episode(case, {**profile, 'per_call_cost_ceiling_usd': config.get('per_call_cost_ceiling_usd')}, timeout, contracts)})
+                             **episode(case, {'model': routing.orchestrator_model, 'reasoning': 'medium',
+                                              **profile, 'per_call_cost_ceiling_usd': config.get('per_call_cost_ceiling_usd')},
+                                       timeout, contracts, routing)})
     return {'schema_version': VERSION, 'timestamp': datetime.now(timezone.utc).isoformat(),
             'execution': 'simulated_decisions_fixed_workers', 'live_multi_agent': False,
             'hashes': {'suite': digest(cases), 'contracts': digest(contracts),
-                       'protocol': digest(PROTOCOL), 'scorer': hashlib.sha256(Path(__file__).read_bytes()).hexdigest()},
+                       'protocol': digest(PROTOCOL), 'scorer': hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
+                       'routing': hashlib.sha256((ROOT / 'harness/model_routing.py').read_bytes()).hexdigest()},
             'config': config, 'results': rows,
             'comparison': [{'profile': p['id'], 'runs': len(group),
                             'pass_rate': sum(r['passed'] for r in group) / len(group),

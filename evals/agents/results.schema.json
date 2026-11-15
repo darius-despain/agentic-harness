@@ -1,10 +1,10 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "Agent simulated episode results v2",
+  "title": "Agent simulated episode results v3",
   "type": "object",
   "required": ["schema_version", "timestamp", "execution", "live_multi_agent", "hashes", "config", "results", "comparison"],
   "properties": {
-    "schema_version": {"const": 2},
+    "schema_version": {"const": 3},
     "timestamp": {"type": "string", "format": "date-time"},
     "execution": {"const": "simulated_decisions_fixed_workers"},
     "live_multi_agent": {"const": false},
@@ -12,7 +12,7 @@
     "config": {"type": "object"},
     "results": {"type": "array", "items": {
       "type": "object",
-      "required": ["case_id", "case_hash", "profile", "attempt", "passed", "quality", "checks", "contract_violations", "trace", "telemetry", "error", "latency_seconds", "cost_usd", "tool_calls", "worker_launches"],
+      "required": ["case_id", "case_hash", "profile", "attempt", "passed", "quality", "checks", "contract_violations", "trace", "telemetry", "error", "latency_seconds", "cost_usd", "tool_calls", "worker_launches", "advisory_requests"],
       "properties": {
         "case_id": {"type": "string"}, "case_hash": {"type": "string"},
         "profile": {"type": "object"}, "attempt": {"type": "integer", "minimum": 1},
@@ -22,7 +22,8 @@
         "error": {"type": ["string", "null"]},
         "latency_seconds": {"type": "number", "minimum": 0},
         "cost_usd": {"type": ["number", "null"], "minimum": 0},
-        "tool_calls": {"type": "integer", "minimum": 0}, "worker_launches": {"type": "integer", "minimum": 0}
+        "tool_calls": {"type": "integer", "minimum": 0}, "worker_launches": {"type": "integer", "minimum": 0},
+        "advisory_requests": {"type": "integer", "minimum": 0}
       }
     }},
     "comparison": {"type": "array", "items": {"type": "object", "required": ["profile", "runs", "pass_rate", "mean_quality", "contract_violations", "latency_seconds", "cost_usd"]}}

@@ -5,7 +5,10 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from unittest.mock import patch
+from types import SimpleNamespace
 from evals.agents.runner import HERE, ROOT, episode, run, score, validate_response, safe_path
+from harness.model_routing import RoutingConfig
 
 
 class AgentEvalsTest(unittest.TestCase):
@@ -41,6 +44,7 @@ class AgentEvalsTest(unittest.TestCase):
         self.assertFalse(safe_path('.env.local'))
         self.assertFalse(safe_path('dir/.env'))
         self.assertFalse(safe_path('dir/.env.test'))
+
 
     def test_calibration_all_cases_and_unknown_telemetry(self):
         result = run(self.config, self.cases)
@@ -148,24 +152,34 @@ class AgentEvalsTest(unittest.TestCase):
                                             capture_output=True, text=True)
                     self.assertEqual(result.returncode, 1)
 
-    def test_role_packets_include_checks_and_reframing_evidence(self):
+    def test_role_packets_include_checks_and_single_turn_escalation(self):
         c = self.case('failure')
         trace = self.good_trace(c)
-        del trace[2][-1]['questions']
-        self.assertIn('missing_or_repeated_reframing', self.rules(c, trace))
+        trace[2][-1]['single_turn'] = False
+        self.assertIn('invalid_escalation', self.rules(c, trace))
         trace = self.good_trace(c)
         del trace[-2][-1]['checks']
         self.assertIn('missing_verification_commands', self.rules(c, trace))
 
-    def test_executive_never_reads_or_implements_code(self):
-        c = self.case('executive')
-        for kind in ('direct', 'read_code', 'read_diff', 'raw_log'):
+    def test_sol_driver_reads_edits_and_delegates_mechanical_execution(self):
+        c = self.case('driver')
+        self.assertTrue(score(c, self.good_trace(c))['passed'])
+        for kind in ('read_code', 'read_diff', 'raw_log'):
             with self.subTest(kind=kind):
                 trace = self.good_trace(c)
                 trace[0].append({'kind': kind, 'file': 'app.py'})
-                self.assertIn('executive_code_access', self.rules(c, trace))
+                self.assertTrue(score(c, trace)['passed'])
+        trace = self.good_trace(c)
+        trace[0].insert(2, {'kind': 'edit', 'file': 'app.py', 'worker': 'root'})
+        self.assertTrue(score(c, trace)['passed'])
+        trace[0].append({'kind': 'direct', 'file': 'app.py'})
+        self.assertIn('driver_write_during_worker_ownership', self.rules(c, trace))
+        for kind in ('read_code', 'read_diff'):
+            trace = self.good_trace(c)
+            trace[0].append({'kind': kind, 'file': '.env'})
+            self.assertIn('private_or_escaping_path', self.rules(c, trace))
 
-    def test_same_instance_socratic_threshold_and_final_attempt_budget(self):
+    def test_same_instance_escalation_threshold_and_final_attempt_budget(self):
         c = self.case('failure')
         trace = self.good_trace(c)
         trace[1][-1]['worker'] = 'replacement'
@@ -180,17 +194,79 @@ class AgentEvalsTest(unittest.TestCase):
         trace[2][1]['questions'] = ['One unsupported guess?']
         self.assertIn('invalid_reframing', self.rules(c, trace))
 
-    def test_uncertain_first_failure_requires_early_investigation(self):
+    def test_first_failure_and_different_spec_cannot_trigger_astra(self):
         c = copy.deepcopy(self.case('failure'))
-        c['turns'][1]['event']['uncertain'] = True
-        self.assertIn('correction_without_diagnosis', self.rules(c, self.good_trace(c)))
-        # Valid early escalation uses one final directed correction, not two retries.
-        original = copy.deepcopy(c['turns'])
-        c['turns'] = [original[0], original[1], original[3], original[4], original[5]]
-        c['turns'][1]['good'] = original[2]['good']
-        c['turns'][1]['required'] = copy.deepcopy(original[2]['required'])
-        c['turns'][-1]['good'][-1]['metric'] = c['turns'][-1]['good'][-1]['metric'].replace('cycles=2', 'cycles=1')
+        trace = self.good_trace(c)
+        trace[1] = [trace[1][0], copy.deepcopy(trace[2][-1])]
+        self.assertIn('invalid_escalation', self.rules(c, trace))
+        c['turns'][2]['event']['test']['file_or_spec'] = 'parser.py::test_other'
+        self.assertIn('invalid_escalation', self.rules(c, self.good_trace(c)))
+
+    def test_astra_never_enters_worker_or_history_loops(self):
+        c = self.case('failure')
+        for field, value in [('history', ['verbose output']), ('tools', ['bash']),
+                             ('bash_output', 'trace'), ('single_turn', False)]:
+            with self.subTest(field=field):
+                trace = self.good_trace(c)
+                trace[2][-1][field] = value
+                self.assertIn('invalid_escalation', self.rules(c, trace))
+        trace = self.good_trace(c)
+        trace[0][0]['model'] = 'gpt-6-astra'
+        self.assertIn('unsupported_routing', self.rules(c, trace))
+        trace = self.good_trace(c)
+        trace[2].append(copy.deepcopy(trace[2][-1]))
+        self.assertIn('invalid_escalation', self.rules(c, trace))
+        trace = self.good_trace(c)
+        trace[3][0]['direction'] = ''
+        self.assertIn('missing_handoff_direction', self.rules(c, trace))
+
+    def test_parallel_dispatch_requires_configured_tier_one_model(self):
+        c = self.case('parallel_workers')
         self.assertTrue(score(c, self.good_trace(c))['passed'])
+        for model in ('gpt-6.1-sol', 'gpt-6-astra', 'gpt-6-luna'):
+            with self.subTest(model=model):
+                trace = self.good_trace(c)
+                trace[0][0]['model'] = model
+                self.assertIn('unsupported_routing', self.rules(c, trace))
+        trace = self.good_trace(c)
+        for assignment in trace[0]:
+            assignment['model'] = 'gpt-6-luna'
+        routing = RoutingConfig.from_mapping({'subagent_worker_model': 'gpt-6-luna'}, environ={})
+        self.assertTrue(score(c, trace, routing)['passed'])
+
+    def test_driver_effort_requires_eligible_architectural_boundary(self):
+        c = self.case('delegation')
+        for effort in ('high', 'max'):
+            with self.subTest(effort=effort):
+                trace = self.good_trace(c)
+                trace[0][-1]['reasoning'] = effort
+                self.assertIn('unsupported_routing', self.rules(c, trace))
+                trace[0][-1]['complexity'] = 'architectural_refactor'
+                self.assertTrue(score(c, trace)['passed'])
+
+    def test_advisory_payload_omits_driver_history_and_verbose_output(self):
+        c = copy.deepcopy(self.case('failure'))
+        c['turns'][2]['event']['test']['error'] *= 200
+        requests = []
+
+        def adapter(command, **kwargs):
+            request = json.loads(kwargs['input'])
+            requests.append(request)
+            response = {'actions': c['turns'][len(requests) - 1]['good'],
+                        'resolved_settings': {'model': 'gpt-6.1-sol', 'reasoning': 'medium'}}
+            return SimpleNamespace(returncode=0, stdout=json.dumps(response))
+
+        with patch('evals.agents.runner.subprocess.run', side_effect=adapter):
+            result = episode(c, {'backend': 'command', 'command': ['fake-adapter']}, 30, {})
+        self.assertTrue(result['passed'])
+        self.assertEqual(result['advisory_requests'], 1)
+        self.assertTrue(requests[2]['history'])
+        payload = requests[2]['escalation']['payload']
+        self.assertEqual(set(payload), {'trigger', 'file_or_spec', 'error', 'interfaces', 'constraints'})
+        self.assertLessEqual(len(payload['error'].encode()), 1024)
+        self.assertNotIn('history', payload)
+        self.assertIsNone(requests[1]['escalation'])
+        self.assertIsNone(requests[3]['escalation'])
 
     def test_patch_before_restore_and_cleanup_before_pivot(self):
         c = self.case('cleanup')
@@ -209,7 +285,7 @@ class AgentEvalsTest(unittest.TestCase):
         trace[-1].insert(4, {'kind': 'remove', 'files': ['parser.py'], 'baseline_preserved': True})
         self.assertIn('remove_preexisting_file', self.rules(c, trace))
         trace = self.good_trace(c)
-        trace[-1][1]['reasoning'] = 'medium'
+        trace[-1][1]['reasoning'] = 'high'
         self.assertIn('unsupported_routing', self.rules(c, trace))
 
     def test_receipt_bounds_required_coverage_and_test_counts(self):
@@ -228,8 +304,8 @@ class AgentEvalsTest(unittest.TestCase):
     def test_telemetry_matches_instances_cycles_and_logger_schema(self):
         c = self.case('failure')
         self.assertTrue(score(c, self.good_trace(c))['passed'])
-        for old, new in [('Impl(Sol-Med):1', 'Impl(Sol-Med):3'), ('cycles=2', 'cycles=3'),
-                         ('reframed=true', 'reframed=false'), ('outcome=verified', 'outcome=blocked-reverted')]:
+        for old, new in [('Impl:1', 'Impl:3'), ('cycles=2', 'cycles=3'),
+                         ('escalated=true', 'escalated=false'), ('outcome=verified', 'outcome=blocked-reverted')]:
             trace = self.good_trace(c)
             trace[-1][-1]['metric'] = trace[-1][-1]['metric'].replace(old, new)
             self.assertIn('invalid_telemetry', self.rules(c, trace))
@@ -272,6 +348,11 @@ class AgentEvalsTest(unittest.TestCase):
             run(cfg, self.cases, True)
         with self.assertRaises(ValueError):
             run({**cfg, 'max_external_calls': 1}, self.cases, True)
+        with self.assertRaisesRegex(ValueError, 'single-turn escalation'):
+            run({**cfg, 'profiles': [{**p, 'model': 'gpt-6-astra'}]}, self.cases, True)
+        for update in ({'model': 'gpt-6.1-terra'}, {'reasoning': 'high'}, {'reasoning': 'max'}):
+            with self.subTest(update=update), self.assertRaises(ValueError):
+                run({**cfg, 'profiles': [{**p, **update}]}, self.cases, True)
 
     def test_adapter_protocol_hides_rubric_and_preserves_workers(self):
         # Test subprocess boundary without a provider, credentials, or network.
@@ -288,16 +369,28 @@ assert 'explicitly selects the codex' in r['instructions']
 assert r['observation']=='Task is one spelling fix. No workers needed.'
 print(json.dumps({'actions':[{'kind':'direct','file':'README.md'}],
  'usage':{'input_tokens':10,'output_tokens':5}, 'cost_usd':0.001,
- 'resolved_settings':{'model':'fake'}}))
+ 'resolved_settings':{'model':'gpt-6.1-sol','reasoning':'medium'}}))
 ''')
             cfg = {**self.config, 'profiles': [{'id': 'adapter', 'backend': 'command',
-                    'command': [sys.executable, str(p)], 'model': 'fake', 'reasoning': 'medium'}],
+                    'command': [sys.executable, str(p)], 'model': 'gpt-6.1-sol', 'reasoning': 'medium'}],
                    'cases': ['direct'], 'max_external_calls': 1,
                    'max_cost_usd': 0.01, 'per_call_cost_ceiling_usd': 0.01}
             r = run(cfg, self.cases, True)
             self.assertTrue(r['results'][0]['passed'])
             self.assertEqual(r['comparison'][0]['cost_usd'], 0.001)
             self.assertEqual(r['results'][0]['telemetry'][0]['usage']['input_tokens'], 10)
+
+    def test_external_adapter_must_confirm_configured_driver(self):
+        for settings in (None, {'model': 'gpt-6-astra', 'reasoning': 'medium'},
+                         {'model': 'gpt-6.1-sol', 'reasoning': 'max'}):
+            with self.subTest(settings=settings):
+                response = {'actions': self.case('direct')['turns'][0]['good'],
+                            'resolved_settings': settings}
+                process = SimpleNamespace(returncode=0, stdout=json.dumps(response))
+                with patch('evals.agents.runner.subprocess.run', return_value=process):
+                    result = episode(self.case('direct'), {'backend': 'command', 'command': ['fake-adapter']}, 30, {})
+                self.assertFalse(result['passed'])
+                self.assertEqual(result['error'], 'adapter_error_or_timeout')
 
     def test_adapter_error_and_timeout_are_failures(self):
         for script in ('raise SystemExit(1)', 'import time; time.sleep(1)', 'print("not json")'):

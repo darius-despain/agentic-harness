@@ -1,154 +1,160 @@
 # Agent evaluation episodes
 
-Standard-library Python framework, initially covering the orchestrator. Run from the checkout root:
+Run the standard-library Python framework from the checkout root.
 
 ```bash
-# Run in your agentic-harness checkout; no personal machine path is required.
 python3 -m evals.agents.runner --case failure --output /tmp/orchestrator-failure.json
 python3 -m evals.agents.runner --config evals/agents/offline.json --output /tmp/orchestrator-matrix.json
 python3 -m unittest discover -s tests -v
 ```
 
-The version-2 default matrix runs ten cases against known good and bad traces. These are
-**scorer calibration**, not model scores. They exercise direct/delegated work,
-shared file and service ownership, failed correction cycles, blocked credentials,
-stale checks, unavailable model routing, user steering and authorization. It targets
-the sequential contract merged in #8, not the parallel design from #6. Additional
-checks cover one active worker including read-only roles, same-instance correction,
-2–3 Socratic questions, one final directed fix, Sol-low patch-before-restore cleanup,
-independent-track pivoting, executive code/diff/log exclusions, baseline dirty locks,
-five-line verification receipts, root-only schema-compatible journaling and exact
-`[ORCH_TELEMETRY]` counts. The single-agent default and honest unavailable-topology
-fallback are separate from opted-in executive mode.
-No workers, provider requests, Git mutations or services run.
+The version-3 default matrix calibrates twelve scenarios against known good and bad
+traces. Cases cover scoped delegation, shared ownership, two repeated test failures,
+blocked credentials, stale checks, unavailable advisory capabilities, user steering,
+parallel mechanical workers and zero-context domain scaffolding. Scripted replay
+creates simulated decisions and reports `live_multi_agent: false`.
+
+## Tier policy
+
+The scorer imports the production `harness.model_routing` policy. It tracks test
+outcomes by task and file/spec using the same router as the runtime. Offline replay
+resolves `model_routing` settings from the evaluation config with an empty environment
+for reproducibility.
+
+- Tier 1 uses the configured `gpt-6.1-terra` worker, with `gpt-6-luna` supported as
+  an explicit configuration choice. Verifiers, evidence investigators, scanners and
+  test runners receive low reasoning, temperature 0.15 and a 60-second timeout by
+  default. Parallel scenarios enforce the configured worker model for every slot.
+- Tier 2 uses `gpt-6.1-sol` with medium reasoning for the driver, serial implementer
+  and scoped cleanup. High or max reasoning requires an eligible
+  `architectural_refactor`, `concurrency_debugging` or `schema_contract` complexity
+  field on the assignment.
+- Tier 3 uses `gpt-6-astra` for one tool-free advisory after two consecutive failures
+  on the same target, or for zero-context domain scaffolding. An `escalate` action
+  requests the compact router payload. The next trusted blueprint observation hands
+  control back to Sol for implementation and verification. The scorer rejects Astra
+  worker assignments, extra escalation history/tools fields and repeated advisory
+  requests during the same failure streak.
+
+The default serial cases retain one active worker and same-instance Sol correction.
+An explicit `parallel_slots` scenario permits independent Tier 1 work. Workers
+release their slots upon completion. Cleanup preserves failed changes in a scoped
+patch before restoration and independent-track pivoting.
 
 ## Experiment boundary
 
-Each case is a versioned scenario with sequential fixed observations. A coordinator
-returns structured actions at each turn; the runner feeds back its previous actions
-and the next scripted worker/tool response. All candidates receive identical worker
-behavior. This is an open-loop simulation: observations advance even if the model
-does not dispatch the expected task. Missing actions lose credit. It measures reaction
-and contract compliance under a curated script, not actual task completion or worker
-performance. Use a separate future environment adapter for action-conditioned live
-workers; never combine those measurements under this execution label.
+Each case supplies versioned fixed observations. The coordinator returns structured
+actions for the current observation, then receives the next scripted response.
+Observations advance even when an expected assignment is missing. The score measures
+reaction and contract compliance under that script. Actual worker execution belongs
+to the production runtime and its adapter verification.
 
-`required` patterns earn equal-weight deterministic partial credit on the specified
-turn. Extra prose does not score. Patterns match action fields, not exact headings.
-`forbidden` patterns and temporal invariants track hard violations separately:
-out-of-scope/private paths, incomplete packets, single-worker capacity, stale acceptance,
-correction limits, cleanup order, telemetry and worker/root authority boundaries.
-File checks enforce both case authorization and each active worker's assigned files.
-Final acceptance and telemetry must remain valid after all actions, not merely have
-appeared earlier. Logger validation includes optional conversation IDs, timestamps
-and prior-session string lists, with differential tests against the real CLI.
-A hard violation fails the episode even with
-full quality credit. Tests calibrate both directions and mutate good traces.
-Requirements match structured decisions, not arbitrary packet/receipt wording.
-Trusted synthetic event metadata supplies failure timing and diagnosis availability;
-the model receives the corresponding observations and explicit allowed/locked scope,
-not hidden scoring requirements or calibration traces.
-The scorer does not semantically establish whether a context packet is sufficient,
-Socratic questions are insightful, a preservation claim/patch is true or recoverable,
-or a reported test actually executed. It checks declared structure and ordering;
-it does not implement a Git cleanup engine or exercise real credentials. No semantic
-judge is implemented; such a judge must have a separately versioned rubric, identity,
-usage and calibration traces. Results must retain these limits.
+Required action patterns earn deterministic partial credit. Hard violations fail an
+episode independently of that credit. Invariants cover private paths, write scope,
+capacity, model routing, independent verification, stale acceptance, correction limits,
+cleanup ordering and root-owned schema-compatible journaling. Synthetic event
+metadata drives the production failure counter and blueprint availability. These
+events come from the fixture, while the adapter sees the corresponding observation,
+routing settings and compact escalation payload.
 
-## Comparing models
+Receipts distinguish syntax, tests, service health and user flows. Tests require a
+positive count and exit zero. Telemetry uses role counts and the advisory count.
+Ver includes test runners, and Inv includes scanners.
 
-Copy `models.example.json` to a local config and replace the command and exact model
-IDs with a supported authenticated runtime adapter. No provider adapter or runtime
-model availability is assumed. The command is an argv array, invoked from the current
-working directory once per decision. Use absolute paths. It reads one JSON request
-from stdin and writes one JSON response to stdout; diagnostics belong on stderr.
-Never print credentials. No shell is used. Model/reasoning/seed are requested fields;
-only returned `resolved_settings` establishes what the backend actually used.
+```text
+[ORCH_TELEMETRY] track=T1 | outcome=verified | spawns=Impl:1,Ver:1,Inv:0,Clean:0,Esc:1 | cycles=2 | escalated=true
+```
+
+Calibration checks declared structure and ordering. Claims about sufficient context,
+supported diagnosis, recoverable patches and actual command execution require
+separate live verification. A future action-conditioned adapter must use a distinct
+execution label and retain its own evidence.
+
+## External coordinator adapters
+
+Copy `models.example.json` to a local config and set an absolute adapter command.
+The example requests Sol medium. The command is an argv array invoked once per
+decision, reading one JSON request from stdin and returning one JSON response on
+stdout. Use a trusted adapter that sanitizes stdout and keeps credential values
+inside the local process. Adapter stderr is discarded. Inherited credentials remain
+accessible to that process.
 
 ```bash
 python3 -m evals.agents.runner --config /tmp/my-models.json --allow-external --output /tmp/model-results.json
 ```
 
-Use this only after choosing the authenticated adapter and agreeing the spending
-scope. `--allow-external` explicitly permits command execution. The runner checks
-max runs and external calls before execution and reserves
-`calls * per_call_cost_ceiling_usd <= max_cost_usd`. Execution is serial (concurrency
-one), with one total timeout per case. The adapter **must enforce** the supplied
-per-call dollar ceiling, token/output limits, and disable hidden retries or include
-them in that ceiling. Reservation is not a provider billing guarantee; the framework
-cannot enforce charges inside arbitrary external commands. No default prices are
-assumed. For estimates, adapters must return dated pricing sources in usage metadata.
-Timeout kills the direct adapter process; adapters must manage their own children
-and cancel provider work. Inherited environment credentials remain inside the local
-process; this is not isolation or automatic redaction. Use only trusted adapters and
-synthetic fixtures. Adapters must sanitize actions/telemetry before stdout; raw stderr
-is discarded. Do not point this runner at private transcripts or environment files.
+External execution requires `--allow-external` and an explicit call/cost budget.
+The runner checks the run and call limits before execution and reserves
+`calls * per_call_cost_ceiling_usd <= max_cost_usd`. The adapter must enforce the
+supplied cost ceiling, output/token limits and bounded retries. Reservation measures
+declared spending scope. Provider charge enforcement depends on the adapter.
+The example reserves twelve decisions across two repetitions of the failure episode.
+Its $0.12 ceiling is illustrative.
 
-Request fields: `protocol_version`, `instructions`, current role `contracts`,
-`profile`, `scenario`, `scope`, `action_kinds`, `history`, `observation`. Version 2
-includes AGENTS.md, shared CORE.md safeguards, the explicitly selected Codex tool
-profile, Git workflow and executive routing contracts in the hashed context.
-These are Codex orchestration scenarios; eval model profiles do not change the
-harness tool selection, and no interactive selection prompt is expected.
-Worker role prompts are not loaded into every coordinator request.
-Hidden rubric and
-calibration actions are excluded. Response:
+The coordinator process receives a total per-case timeout. Its adapter must manage
+child processes and provider cancellation. An Astra coordinator profile is rejected
+because coordinator decisions form an interactive loop. Advisory decisions remain
+simulated within this evaluation. Runtime advisory requests use the production
+tool-free transport.
+
+Command profiles enforce the configured Sol driver. High or max reasoning requires
+an eligible complexity field. The returned resolved model and reasoning receipt must
+match the requested route for the decision to succeed.
+
+## Adapter protocol
+
+These scenarios explicitly select the Codex harness profile and orchestrated
+mode; evaluation model profiles do not change that selection or trigger a prompt.
+Hashed contracts include `AGENTS.md`, `harness/CORE.md`, the selected
+`harness/profiles/codex.md`, and the executive/Git routing instructions. Worker
+prompts and other tool profiles are not loaded into every coordinator request.
+
+Request fields include `protocol_version`, `instructions`, `contracts`, `profile`,
+`routing`, `escalation`, `scenario`, `scope`, `action_kinds`, `history` and
+`observation`. The role routes expose requested model, effort, temperature, timeout
+and output bounds. External commands must return a matching `resolved_settings`
+receipt identifying their backend model and reasoning.
+
+A pending `escalation` contains the requested model and a whitelisted payload with
+trigger, file/spec, core error, relevant interfaces and constraints. Coordinator
+history stays outside that payload. The production router caps every evidence field
+before it reaches the advisory request. Hidden rubric and calibration actions remain
+outside the coordinator request.
 
 ```json
 {
-  "actions": [{"kind": "correct", "worker": "w", "cause": "changed_code"}],
-  "usage": {"input_tokens": 100, "output_tokens": 20, "cached_tokens": 0, "reasoning_tokens": 10},
-  "resolved_settings": {"model": "actual-id", "reasoning": "high"},
+  "actions": [
+    {"kind": "escalate", "target": "parser.py::test_eof", "model": "gpt-6-astra", "single_turn": true}
+  ],
+  "usage": {"input_tokens": 100, "output_tokens": 20, "reasoning_tokens": 10},
+  "resolved_settings": {"model": "gpt-6.1-sol", "reasoning": "medium"},
   "cost_usd": null
 }
 ```
 
-Actions use the case vocabulary. Assignments contain worker, role, files, context,
-acceptance and state; include model/reasoning/fresh_context for routing decisions.
-Verifier packets also name specific `checks`; investigator packets carry the same
-2–3 `questions` and the failure `findings` used for reframing.
-Simulated worker model names use `sol` and the role's reasoning level; these action
-labels do not choose the actual coordinator provider/model. `assign` creates an
-instance; `correct` resumes the same implementer and consumes one correction cycle.
-Release ends an active slot, preserving the idle instance for reuse. Verify includes
-its independent worker, checked state and five-line receipt; edit invalidates verification,
-and accept must name the checked state. Other actions use file, task, resource,
-questions, cause, limitation or coverage as relevant to the observation. Cleanup
-records explicit patch/restore/result/release/pivot actions; none runs Git. Telemetry
-uses the exact metric string and counts simulated instance creation, not resumes.
-Journal actions declare a root-owned record with the logger's required string lists.
-Cases use
-synthetic `/workspace/repo` paths, never the developer's actual checkout. Actions
-are records, never executable tools.
+Assignments declare worker, role, exact files, compact context, acceptance, state,
+model, reasoning and `fresh_context: true`. Verifiers also declare concrete checks.
+`correct` resumes the existing Sol implementer and consumes a correction cycle.
+`escalate` accepts exactly kind, target, model and single_turn. A trusted blueprint
+observation must precede the final correction and its explicit direction.
+`verify` supplies an independent five-line receipt, `edit` invalidates verification,
+and `accept` identifies the checked revision. Journal actions contain the logger's
+required string lists and root ownership.
 
 ## Results and extensions
 
-JSON results include schema version, UTC timestamp, protocol/contracts/suite/scorer
-hashes, profile and requested settings, per-turn traces, exposed resolved settings,
-usage categories, cost, wall latency, launch/tool counts, checks and violations.
-`results.schema.json` describes the envelope. Missing usage/cost remains null;
-scripted timings measure local replay only. Adapter latency includes process startup.
-Tool counts include simulated verify/access calls; worker launches count assignments
-(including investigator/cleanup roles),
-not actual processes. Cost totals remain unknown if any component is unknown.
-Adapter errors and timeouts are failed runs and remain in pass-rate denominators.
-Comparison lists each repetition's latency; per-case results retain variation. Do not
-rank models or claim significance from the calibration matrix or a tiny live sample.
-Worker scripts and contracts are hashed so differing experiments can be recognized.
+Results include schema version 3, UTC timestamp, protocol/contracts/suite/scorer/router
+hashes, requested profile settings, traces, resolved settings, usage, cost and latency.
+`worker_launches` counts simulated assignments. `advisory_requests` counts simulated
+one-turn advisory calls. Missing usage and cost remain null. Adapter startup contributes
+to latency, and failed runs remain in pass-rate denominators.
 
-Results/protocol/case versions are now 2; old calibration hashes/scores are not
-comparable. Custom version-2 cases declare `mode`, `track`, `allowed_files`, optional
-`locked_files`/`new_files`/`required_checks`, and explicit observations. `event` is
-trusted fixture metadata for failure attempt, uncertainty, external blocker and
-supported diagnosis; never accept it from an adapter. Keep live action-conditioned
-testing separate and require explicit spending approval before provider comparisons.
-The example external matrix now reserves 24 decisions (six per failure episode,
-two profiles, two repetitions); its $0.24 ceiling is illustrative, not a model price.
+Version-3 scores and hashes require fresh calibration. Custom cases declare mode,
+track, allowed files, optional locked/new paths, required checks and parallel slots.
+Trusted `event.test` records declare task ID, file/spec, outcome and compact evidence.
+`event.zero_context_domain` requests domain scaffolding, and
+`event.blueprint_ready` supplies the single-turn handoff boundary.
 
-Add implementer/verifier/investigator JSON cases with the same turn structure and
-run `--suite /absolute/path/to/suite.json`. Add role-specific contracts in `run`,
-new action invariants in `score`, and adversarial calibration tests before use.
-Changing `role` metadata alone does not load another role prompt. Replace `episode`
-for an action-conditioned environment; retain the common scored result envelope
-and set a new execution label for live workers. Keep reports outside session journals;
-only actual implementation/validation outcomes belong in the harness journal.
+Extend role-specific cases and adversarial tests alongside new invariants. Keep
+reports outside session journals. Actual implementation and verification outcomes
+may be recorded through the configured session logger.

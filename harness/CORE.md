@@ -37,6 +37,16 @@ Load only the relevant skill; prefer project-local copies, otherwise `~/.agents/
 
 Skill use grants no deployment, publication, scheduling, or unrelated-project permission.
 
+## Markdown task pilot
+
+For new tasks, load [the task workflow](TASKS.md); preserve existing owner approvals.
+
+## Drafting teammate requests
+
+- When drafting a request for a teammate, default to a short, paste-ready bullet list the user can put below their own introduction. Let the user supply the greeting and opening ask unless they request a complete message.
+- Use short labels and include only what helps the teammate act. Where relevant, explain why now, what changed or what the evidence shows, what was verified and its limits, and the specific action or decision you want from the teammate. For a review request, include the direct PR link and the question the reviewer should focus on.
+- Adapt the bullets to the request and the audience. Omit irrelevant sections and routine agent process.
+
 # Credential handling
 
 - `.env`/`.env.*` are secret-bearing: filenames/status only. Never read contents (including via symlinks), copy, diff, stash, stage, log, or elevate to bypass denies.

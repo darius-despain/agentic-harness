@@ -28,7 +28,7 @@ git clone https://github.com/darius-despain/agentic-harness.git
 cd agentic-harness
 ```
 
-- Project-local setup: copy `.agents/skills/` and `harness/` into the target project; merge `AGENTS.md`; preserve existing files and review differences. Copy `harness-config-template.json` to `harness-config.json`, set `project`, and add supplied ignore patterns.
+- Project-local setup: copy `.agents/skills/` and `harness/` into the target project and merge `AGENTS.md`. If adopting the Markdown task pilot, also copy `templates/roadmap.md` and `templates/task.md` to the same paths in the project so the workflow links resolve. Preserve existing files and review differences. Copy `harness-config-template.json` to `harness-config.json`, set `project`, and add supplied ignore patterns.
 - Global setup: inspect the [link installer procedure](docs/installation-and-git.md#live-global-installation-with-symlinks) first; it replaces global instructions/skills and links personal configuration. Every consumer still needs its own config/journal.
 - Logger-only installation: use [preview/apply](docs/project-setup.md); `install_project.py` installs `audit.py` and config, not skills, instructions, preflight, or guards.
 - Copied installations require reviewed upgrades; symlinks use the live source. Preserve consumer configuration and instructions.

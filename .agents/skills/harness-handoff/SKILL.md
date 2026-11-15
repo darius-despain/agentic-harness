@@ -37,6 +37,7 @@ description: Prepare a project handoff and next-session kickoff prompt when aske
 - If persistence is denied, provide sanitized context/prompt inline and state no file was saved.
 - Include only what the objective needs:
   - Objective, outcome, acceptance criteria, first action; relevant decisions/constraints and consequential rejected alternatives.
+  - Current tool profile and any explicit next-tool choice; otherwise ask the next session to select. Keep tool-specific role prompts/settings out of the portable brief. A prior profile is historical, not a new session's selection.
   - Completed versus recommended/pending work; exclusions.
   - Absolute project/checkout paths, branch/commit, known remote/PR state and freshness, preserved work and reconciliation checkpoints.
   - Actual validation/results/scope: static, syntax, tests, health, screenshots, authenticated flows; mark old checks historical and identify reruns.

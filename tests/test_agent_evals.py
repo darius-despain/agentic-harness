@@ -281,6 +281,10 @@ class AgentEvalsTest(unittest.TestCase):
 r=json.load(sys.stdin)
 assert 'required' not in r and 'good' not in r and 'bad' not in r
 assert r['contracts'] and r['profile']['reasoning']=='medium'
+assert '.env' in r['contracts']['harness/CORE.md']
+assert 'harness/profiles/codex.md' in r['contracts']
+assert 'harness/profiles/antigravity.md' not in r['contracts']
+assert 'explicitly selects the codex' in r['instructions']
 assert r['observation']=='Task is one spelling fix. No workers needed.'
 print(json.dumps({'actions':[{'kind':'direct','file':'README.md'}],
  'usage':{'input_tokens':10,'output_tokens':5}, 'cost_usd':0.001,

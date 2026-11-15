@@ -1,17 +1,41 @@
 # Portable agentic harness
 
 - Five workflows: implement, review, journal, hand off, and improve from evidence.
-- Python tools require Python 3.9+ without external packages; Git checks require Git, GitHub readiness also requires `gh`. Skills/global installation target Codex; other agents need compatible loading.
+- Python tools require Python 3.9+ without external packages; Git checks require Git, GitHub readiness also requires `gh`. Shared workflows support Codex, Antigravity, Claude Code and a generic profile for other tools.
 - Installation does not capture chats, schedule jobs, activate hooks, publish reviews, or grant repository access. Each teammate supplies configuration and authentication.
 
 ## Find your way around
 
-- [AGENTS.md](AGENTS.md): shared operational and credential rules; merge with project instructions.
+- [AGENTS.md](AGENTS.md): small session entrypoint; [CORE.md](harness/CORE.md): shared operational and credential rules.
+- [Tool profiles and startup](docs/agent-tools.md): selection, native bridges, local preferences and adding another assistant. [Follow-up suggestions](docs/harness-suggestions.md): evidence and priorities.
 - [.agents/skills/](.agents/skills/): workflow entrypoints, UI metadata, and task-specific references.
 - [harness/](harness/): logging/auditing, installers, Git preflight and guards; [tests/](tests/): regression suite.
 - [Project setup](docs/project-setup.md): logger installation and migration; [installation and Git](docs/installation-and-git.md): global links, readiness, recovery, optional guards.
 - [Skill inventory](docs/skill-inventory.md), [iteration notes](docs/iteration-notes.md), [GUARDRAIL.md](GUARDRAIL.md): provenance/history; adapt personal paths before reuse.
-- Private, ignored artifacts: `harness-config.json`, `conversations/`, `harness/reports/`, `.harness/handoffs/`, `codex/config.local.toml`. They do not travel with clones.
+- Private, ignored artifacts: `harness-config.json`, `conversations/`, `harness/reports/`, `.harness/handoffs/`, `.harness/local.json`, `AGENTS.local.md`, `CLAUDE.local.md`, `codex/config.local.toml`. They do not travel with clones.
+
+## Select a tool without extra startup work
+
+Tell the agent “Read AGENTS.md; use the codex profile” (or `antigravity`,
+`claude-code`, `generic`). With no explicit or saved choice, the entrypoint tells
+the agent to ask once before editing. Only shared rules, the selected profile and
+the relevant workflow are loaded. Selection keeps the current model/settings and
+the single-agent loop; orchestration remains a separate opt-in.
+
+```bash
+python3 harness/session.py --tool codex
+python3 harness/session.py --tool antigravity
+python3 harness/session.py --tool codex --remember
+python3 harness/session.py --forget
+```
+
+The selector prints files for the agent to read; it does not launch or configure
+agents. No choice in a terminal prompts; no choice unattended exits 2.
+`--remember` saves an ignored project preference; plain `--tool` overrides it for
+one session. Optional `AGENTS.local.md` holds nonsecret personal preferences.
+See [setup and discovery limits](docs/agent-tools.md) for native bridges and full
+installation. If your tool does not discover instructions, explicitly ask it to
+read `AGENTS.md`.
 
 ## How the workflows fit together
 
@@ -28,7 +52,7 @@ git clone https://github.com/darius-despain/agentic-harness.git
 cd agentic-harness
 ```
 
-- Project-local setup: copy `.agents/skills/` and `harness/` into the target project; merge `AGENTS.md`; preserve existing files and review differences. Copy `harness-config-template.json` to `harness-config.json`, set `project`, and add supplied ignore patterns.
+- Project-local setup: follow the [full harness procedure](docs/agent-tools.md#install-or-upgrade-a-full-harness) to copy skills/shared assets and merge native entrypoints while preserving existing instructions. Configure the logger separately with the template or project installer.
 - Global setup: inspect the [link installer procedure](docs/installation-and-git.md#live-global-installation-with-symlinks) first; it replaces global instructions/skills and links personal configuration. Every consumer still needs its own config/journal.
 - Logger-only installation: use [preview/apply](docs/project-setup.md); `install_project.py` installs `audit.py` and config, not skills, instructions, preflight, or guards.
 - Copied installations require reviewed upgrades; symlinks use the live source. Preserve consumer configuration and instructions.
@@ -80,7 +104,7 @@ python3 -m unittest discover -s tests -v
 ## Reusable skills
 
 - [Development](.agents/skills/harness-development-loop/SKILL.md): implement requested behavior, verify, report blockers.
-  - Optional [orchestrated mode](.agents/skills/harness-development-loop/references/orchestration.md): explicitly opt in to an Astra executive with one active Sol worker at a time, bounded verification/escalation and scoped cleanup. Role files provide prompts; the runtime selects models. Example: `$harness-development-loop orchestrated mode: fix <behavior> in <checkout>`.
+  - Optional Codex-specific [orchestrated mode](.agents/skills/harness-development-loop/references/orchestration.md): explicitly opt in to one active worker at a time, bounded verification/escalation and scoped cleanup. Its model/control requirements are separate from tool selection. Example: `$harness-development-loop orchestrated mode: fix <behavior> in <checkout>`. Other profiles retain the portable single-agent loop unless supported native delegation is explicitly established.
 - [PR review](.agents/skills/harness-pr-review/SKILL.md): inspect PR/branch with an independent reviewer; recommend a merge decision. Posting requires authorization.
 - [Session evidence](.agents/skills/harness-session-evidence/SKILL.md): save/verify sanitized outcomes or recover source-backed context.
 - [Handoff](.agents/skills/harness-handoff/SKILL.md): private brief and copyable next-chat prompt; clarify materially different objectives. Local scoped commits may be appropriate; pushing requires an explicit request.

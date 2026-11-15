@@ -1,6 +1,9 @@
 # Install the logger in a project
 
 Global instruction/skill links do not install `harness/audit.py` or a project config.
+This is the **logger-only** installer; it does not install the selector, profiles,
+shared instructions or native bridges. For the complete harness, follow
+[tool setup](agent-tools.md#install-or-upgrade-a-full-harness).
 Use the project installer from this template checkout (Python 3.9+, no dependencies):
 
 ```bash

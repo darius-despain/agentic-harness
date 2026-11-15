@@ -1,6 +1,9 @@
 # Installation and Git reference
 
 Detailed opt-in setup; read the relevant section before installation or hook changes.
+For Codex, Antigravity, Claude Code or another assistant in a project, start with
+[tool profiles](agent-tools.md). Selection requires no global installation. The
+global link installer below remains Codex-specific; do not run it to change profiles.
 
 ## Live global installation with symlinks
 

@@ -86,7 +86,10 @@ is discarded. Do not point this runner at private transcripts or environment fil
 
 Request fields: `protocol_version`, `instructions`, current role `contracts`,
 `profile`, `scenario`, `scope`, `action_kinds`, `history`, `observation`. Version 2
-includes AGENTS.md, Git workflow and executive routing contracts in the hashed context.
+includes AGENTS.md, shared CORE.md safeguards, the explicitly selected Codex tool
+profile, Git workflow and executive routing contracts in the hashed context.
+These are Codex orchestration scenarios; eval model profiles do not change the
+harness tool selection, and no interactive selection prompt is expected.
 Worker role prompts are not loaded into every coordinator request.
 Hidden rubric and
 calibration actions are excluded. Response:

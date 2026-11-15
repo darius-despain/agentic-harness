@@ -1,5 +1,7 @@
 # Opt-in orchestration
 
+This is the existing **Codex-specific** protocol with explicit model/control requirements, not the default development loop. Load it only when the selected profile is `codex` and the user requests orchestrated mode. Other tool profiles use the portable single-agent workflow or a separately established native delegation workflow. Tool selection alone never loads this document.
+
 Read applicable `AGENTS.md` and [Git workflow](git-workflow.md). This protocol adds routing and limits; it grants no commit, publication, deployment, network, or credential authority. Use [contracts](task-contract.md) for compact packets and results.
 
 ## Roles and token budget

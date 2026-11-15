@@ -16,6 +16,8 @@ PROTOCOL = """Return JSON {actions: [objects], usage: object|null, resolved_sett
 cost_usd: number|null}. Choose actions in response to the latest observation; prior turns
 are context. Actions use kind plus fields from the case action vocabulary. Never execute
 real worker/tool actions: this is a simulated decision episode. Do not emit credentials.
+This evaluation explicitly selects the codex harness tool profile and orchestrated
+mode. Do not prompt for a tool selection; adapter model settings remain separate.
 Only actions, not prose promises, count. Each action must be grounded in the observations.
 Scope supplies mode, track, allowed/locked files and required checks. Paths are relative
 to /workspace/repo. Initial assignments use state S0, model sol, fresh_context true;
@@ -374,6 +376,8 @@ def run(config, cases, allow_external=False):
             raise ValueError('explicit cost reservation must cover every possible call')
     contracts = {str(p.relative_to(ROOT)): p.read_text() for p in [
         ROOT / 'AGENTS.md',
+        ROOT / 'harness/CORE.md',
+        ROOT / 'harness/profiles/codex.md',
         ROOT / '.agents/skills/harness-development-loop/SKILL.md',
         ROOT / '.agents/skills/harness-development-loop/agents/orchestrator.md',
         ROOT / '.agents/skills/harness-development-loop/references/git-workflow.md',

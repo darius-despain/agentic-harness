@@ -17,6 +17,7 @@ actual consumer root. Local preferences do not override these safeguards.
 - Changed restricted config does not halt safe work: follow Git metadata-only transition checks; never hide status or bypass restrictions.
 - Use absolute setup paths across directory changes; inspect scripts for resets/destructive effects. Prefer local dependencies; global installs/OS permission changes require authorization.
 - Report syntax, tests, service health, and user-flow checks separately, with blockers. HTTP 200 does not verify authenticated behavior.
+- End final responses with a concise **Bottom Line & Next Steps** section stating the current status and concrete next actions for the user.
 - Before finishing, use configured logging when writable: stable `session_id`; string lists `workflow_insights`, `changes_made`, `validation`, `blockers`, `source_references`.
 - **Output Token Diet:** Session records must be ultra-compact. Maximum **3 items** per array, maximum **120 characters** per string entry. Ban custom nested objects like `git_access_checkpoint` or `orchestration_telemetry` unless publication divergence occurred. Verify the saved record; disclose persistence failure. Logging/auditing require explicit invocation; no chat capture/scheduling occurs automatically.
 

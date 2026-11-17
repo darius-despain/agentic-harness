@@ -17,10 +17,13 @@
 ## Select a tool without extra startup work
 
 Tell the agent “Read AGENTS.md; use the codex profile” (or `antigravity`,
-`claude-code`, `generic`). With no explicit or saved choice, the entrypoint tells
-the agent to ask once before editing. Only shared rules, the selected profile and
-the relevant workflow are loaded. Selection keeps the current model/settings and
-the single-agent loop; orchestration remains a separate opt-in.
+`claude-code`, `generic`). When the agent's own runtime unambiguously identifies
+the host (`codex`, `antigravity`, or `claude-code`), it selects that matching
+profile automatically unless you override it. With no explicit choice, runtime
+identity, or saved choice, the entrypoint tells the agent to ask once before
+editing. Only shared rules, the selected profile and the relevant workflow are
+loaded. Selection keeps the current model/settings and the single-agent loop;
+orchestration remains a separate opt-in.
 
 ```bash
 python3 harness/session.py --tool codex

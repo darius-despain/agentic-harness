@@ -12,9 +12,10 @@ Open the project in your agent and say, for example:
 
 > Read AGENTS.md. Use the antigravity profile for this session and fix <behavior>.
 
-Without an explicit or saved choice, the entrypoint tells the agent to ask once:
-Codex, Antigravity, Claude Code, or generic? It waits for selection before edits or
-tool-specific setup; read-only orientation may continue. A clear existing choice
+Without an explicit choice, unambiguous active runtime identity, or saved choice,
+the entrypoint tells the agent to ask once: Codex, Antigravity, Claude Code, or
+generic? It waits for selection before edits or tool-specific setup; read-only
+orientation may continue. A clear existing choice or explicit runtime identity
 needs no further confirmation. Use these stable identifiers:
 
 | Profile | Native entrypoint supplied here | Workflow loading |
@@ -59,13 +60,14 @@ fail with an error. Explicit `--tool` bypasses a malformed saved choice temporar
 JSON manually; `--forget` also needs valid JSON. EOF at the prompt exits 2 without
 saving anything.
 
-Precedence: explicit current-conversation choice / `--tool`, then project
-`.harness/local.json`, then one prompt. If a command receipt conflicts with the
-user's choice, the latest explicit user instruction wins. Keep the selection
-across turns. Say “switch to the antigravity profile” to change it; stop applying
-the former profile. If a saved choice appears mismatched to the actual runtime,
-clarify before using tool-specific features. Never infer a choice from native
-instruction filenames, installed CLIs, subscriptions or a prior handoff.
+Precedence: explicit current-conversation choice / `--tool`, then unambiguous
+active runtime identity (`codex`, `antigravity`, or `claude-code` when the
+agent's own system prompt or host runtime explicitly identifies the active
+session), then project `.harness/local.json`, then one prompt. If a command
+receipt conflicts with the user's choice, the latest explicit user instruction
+wins. Keep the selection across turns. Say “switch to the antigravity profile”
+to change it; stop applying the former profile. Never infer a choice from native
+instruction filenames, installed CLIs on disk, subscriptions or a prior handoff.
 
 ## Save local preferences
 

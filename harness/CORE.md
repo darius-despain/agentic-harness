@@ -18,8 +18,10 @@ actual consumer root. Local preferences do not override these safeguards.
 - Use absolute setup paths across directory changes; inspect scripts for resets/destructive effects. Prefer local dependencies; global installs/OS permission changes require authorization.
 - Report syntax, tests, service health, and user-flow checks separately, with blockers. HTTP 200 does not verify authenticated behavior.
 - End final responses with a concise **Bottom Line & Next Steps** section stating the current status and concrete next actions for the user.
-- Before finishing, use configured logging when writable: stable `session_id`; string lists `workflow_insights`, `changes_made`, `validation`, `blockers`, `source_references`.
-- **Output Token Diet:** Session records must be ultra-compact. Maximum **3 items** per array, maximum **120 characters** per string entry. Ban custom nested objects like `git_access_checkpoint` or `orchestration_telemetry` unless publication divergence occurred. Verify the saved record; disclose persistence failure. Logging/auditing require explicit invocation; no chat capture/scheduling occurs automatically.
+- Before the final response for any non-trivial task, including substantive read-only work and tasks without a skill, save a sanitized record when the project has `harness-config.json` and the configured journal is writable. The agent runs `python3 harness/audit.py --config harness-config.json log --record /absolute/path/to/sanitized-record.json` after the config check, without a separate user request. For a linked harness, use the shared script's absolute path and the consumer's config.
+- Use a stable `session_id` and string lists `workflow_insights`, `changes_made`, `validation`, `blockers`, and `source_references`. Exclude secrets and raw chat or transcript content. Verify the new record and disclose any persistence failure.
+- **Output Token Diet:** Maximum **3 items** per array and **120 characters** per string entry. Ban custom nested objects like `git_access_checkpoint` or `orchestration_telemetry` unless publication divergence occurred.
+- Run pattern audits only when requested or as part of a requested audit workflow. Saving audit reports (`audit --write`), raw chat capture, and background scheduling require explicit opt-in and remain subject to the privacy and credential rules.
 
 ## Git workflow
 

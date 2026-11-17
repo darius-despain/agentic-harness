@@ -1,157 +1,145 @@
-# Portable agentic harness
+# Agentic Harness
 
-- Five workflows: implement, review, journal, hand off, and improve from evidence.
-- Python tools require Python 3.9+ without external packages; Git checks require Git, GitHub readiness also requires `gh`. Shared workflows support Codex, Antigravity, Claude Code and a generic profile for other tools.
-- Installation does not capture chats, schedule jobs, activate hooks, publish reviews, or grant repository access. Each teammate supplies configuration and authentication.
+A lightweight, optional workflow harness for AI coding assistants—built to work across **Claude Code**, **Codex**, **Antigravity**, **open-source / free-tier IDE & CLI agents**, and **ChatGPT / web chat**.
 
-## Find your way around
+It gives you five portable Markdown workflows—**implement & verify**, **PR review**, **session journaling**, **handoffs**, and **evidence-based improvement**—plus optional Python helpers (Python 3.9+ standard library only, zero external packages). Nothing here forces a specific model, paid subscription, or background telemetry.
 
-- [AGENTS.md](AGENTS.md): small session entrypoint; [CORE.md](harness/CORE.md): shared operational and credential rules.
-- [Tool profiles and startup](docs/agent-tools.md): selection, native bridges, local preferences and adding another assistant. [Follow-up suggestions](docs/harness-suggestions.md): evidence and priorities.
-- [.agents/skills/](.agents/skills/): workflow entrypoints, UI metadata, and task-specific references.
-- [harness/](harness/): logging/auditing, installers, Git preflight and guards; [tests/](tests/): regression suite.
-- [Project setup](docs/project-setup.md): logger installation and migration; [installation and Git](docs/installation-and-git.md): global links, readiness, recovery, optional guards.
-- [Skill inventory](docs/skill-inventory.md), [iteration notes](docs/iteration-notes.md), [GUARDRAIL.md](GUARDRAIL.md): provenance/history; adapt personal paths before reuse.
-- Private, ignored artifacts: `harness-config.json`, `conversations/`, `harness/reports/`, `.harness/handoffs/`, `.harness/local.json`, `AGENTS.local.md`, `CLAUDE.local.md`, `codex/config.local.toml`. They do not travel with clones.
+> **Already set up?** Read **[Workflows & Examples](docs/workflows-and-examples.md)** for a practical walkthrough of when to use each skill, copy-pasteable prompts, and real sanitized examples from our sessions.
 
-## Select a tool without extra startup work
+---
 
-Tell the agent “Read AGENTS.md; use the codex profile” (or `antigravity`,
-`claude-code`, `generic`). When the agent's own runtime unambiguously identifies
-the host (`codex`, `antigravity`, or `claude-code`), it selects that matching
-profile automatically unless you override it. With no explicit choice, runtime
-identity, or saved choice, the entrypoint tells the agent to ask once before
-editing. Only shared rules, the selected profile and the relevant workflow are
-loaded. Selection keeps the current model/settings and the single-agent loop;
-orchestration remains a separate opt-in.
+## Quick start (clone once)
 
-```bash
-python3 harness/session.py --tool codex
-python3 harness/session.py --tool antigravity
-python3 harness/session.py --tool codex --remember
-python3 harness/session.py --forget
-```
-
-The selector prints files for the agent to read; it does not launch or configure
-agents. No choice in a terminal prompts; no choice unattended exits 2.
-`--remember` saves an ignored project preference; plain `--tool` overrides it for
-one session. Optional `AGENTS.local.md` holds nonsecret personal preferences.
-See [setup and discovery limits](docs/agent-tools.md) for native bridges and full
-installation. If your tool does not discover instructions, explicitly ask it to
-read `AGENTS.md`.
-
-## How the workflows fit together
-
-- Development → requested PR review → fixes/re-review; journal actual outcomes throughout.
-- Handoff preserves a chosen next objective; the next chat rechecks mutable state.
-- Improvement separately evaluates recorded friction and applies supported harness changes.
-
-## Start from the shared repository
-
-- Clone into a stable location, then work from its root:
+Clone this repository into a stable local folder:
 
 ```bash
 git clone https://github.com/darius-despain/agentic-harness.git
 cd agentic-harness
 ```
 
-- Project-local setup: follow the [full harness procedure](docs/agent-tools.md#install-or-upgrade-a-full-harness) to copy skills/shared assets and merge native entrypoints while preserving existing instructions. If adopting the Markdown task pilot, also copy `templates/roadmap.md` and `templates/task.md` so its links resolve. Configure the logger separately with the template or project installer.
-- Global setup: inspect the [link installer procedure](docs/installation-and-git.md#live-global-installation-with-symlinks) first; it replaces global instructions/skills and links personal configuration. Every consumer still needs its own config/journal.
-- Logger-only installation: use [preview/apply](docs/project-setup.md); `install_project.py` installs `audit.py` and config, not skills, instructions, preflight, or guards.
-- Copied installations require reviewed upgrades; symlinks use the live source. Preserve consumer configuration and instructions.
-- From the target root, validate configuration:
+**Requirements:**
+- **Python 3.9+** (only needed for optional CLI tools like `session.py`, `audit.py`, and tests; zero pip dependencies)
+- **Git** (and `gh` only if you opt into GitHub readiness checks)
+
+---
+
+## Set up for your AI agent
+
+Every session starts with [AGENTS.md](AGENTS.md), which loads [harness/CORE.md](harness/CORE.md) plus **one** matching profile from `harness/profiles/`. Pick the instructions for the tool you use:
+
+### 1. Claude Code (`claude-code`)
+- This repo already includes [CLAUDE.md](CLAUDE.md), which automatically imports `AGENTS.md` and selects the `claude-code` profile.
+- **How to start:** Open your project in Claude Code, or say:
+  > Read `AGENTS.md`; use the `claude-code` profile.
+
+### 2. Codex (`codex`)
+- Codex natively discovers [AGENTS.md](AGENTS.md) and `.agents/skills/`.
+- **How to start:** Open your project in Codex, or say:
+  > Read `AGENTS.md`; use the `codex` profile.
+- **Optional global Codex setup:** See [live global installation with symlinks](docs/installation-and-git.md#live-global-installation-with-symlinks) (`harness/install_links.py`).
+
+### 3. Antigravity (`antigravity`)
+- This repo includes [.agent/rules/harness.md](.agent/rules/harness.md), which points Antigravity to `AGENTS.md` and selects the `antigravity` profile.
+- **How to start:** Open your project in Antigravity, or say:
+  > Read `AGENTS.md`; use the `antigravity` profile.
+
+### 4. Open-source, free-tier, or other IDE/CLI agents (`generic`)
+Works with **OpenCode**, **Cursor**, **Windsurf**, **Cline**, **Roo Code**, **Aider**, **Gemini CLI**, **Continue**, **Goose**, or any other local/open-source/free-tier coding assistant:
+- **How to start:** In your first prompt, tell the agent:
+  > Read `AGENTS.md`; use the `generic` profile.
+- **If your tool has its own rules file** (e.g., `.cursorrules`, `.windsurfrules`, `.clinerules`, `CONVENTIONS.md`): add a one-line pointer telling it to read `AGENTS.md` and use the `generic` profile—don't copy shared rules into it.
+- **Skills:** If your tool doesn't auto-discover `.agents/skills/`, tell it which `.agents/skills/<workflow>/SKILL.md` file to read as plain Markdown.
+
+### 5. ChatGPT or web-based chat assistants (`generic`)
+If you're using ChatGPT (free or paid) or another web chat without direct access to your local filesystem:
+1. Paste or upload [AGENTS.md](AGENTS.md), [harness/CORE.md](harness/CORE.md), [harness/profiles/generic.md](harness/profiles/generic.md), and the one workflow you need from `.agents/skills/<workflow>/SKILL.md`.
+2. Start the chat with:
+   > Use the `generic` profile. Follow these instructions, and give me exact terminal commands to run locally whenever you don't have shell access.
+3. Run any suggested commands in your local terminal and paste the output back.
+
+### Optional: Terminal selector & personal preferences
+You can also print the exact files to load or save a per-project default tool in `.harness/local.json` (gitignored):
 
 ```bash
-python3 harness/audit.py --config harness-config.json check
+python3 harness/session.py --tool generic
+python3 harness/session.py --tool claude-code --remember
+python3 harness/session.py --forget
 ```
 
-- Resolve paths relative to the config. Data paths must stay within the project; absolute paths, parent traversal, and escaping symlinks are rejected. Keep journals/reports separate and private.
+For personal, non-secret preferences (like concise updates or local test commands), copy [AGENTS.local.example.md](AGENTS.local.example.md) to `AGENTS.local.md` in your project root (also gitignored). See [docs/agent-tools.md](docs/agent-tools.md) for full details.
 
-## Save a session
+---
 
-- Run `check`, then prepare sanitized JSON:
+## Use the harness in another project
 
-```json
-{
-  "session_id": "stable-chat-or-session-id",
-  "workflow_insights": [],
-  "changes_made": [],
-  "validation": [],
-  "blockers": [],
-  "source_references": []
-}
-```
+Choose whichever level of adoption fits your workflow:
+
+1. **Reference from your shared clone (easiest to keep updated):**
+   Point your agent to your local `agentic-harness` clone (or symlink `harness/` and `.agents/skills/` into your project), while keeping `harness-config.json`, `.harness/local.json`, and `AGENTS.local.md` in your project root.
+2. **Copy into a project repository:**
+   Follow [Install or upgrade a full harness](docs/agent-tools.md#install-or-upgrade-a-full-harness) to copy `harness/`, `.agents/skills/`, `AGENTS.md`, and any bridges (`CLAUDE.md`, `.agent/rules/harness.md`) into your repo. Add these lines to your project's `.gitignore`:
+   ```gitignore
+   /.harness/local.json
+   /AGENTS.local.md
+   /CLAUDE.local.md
+   ```
+3. **Logger only (no skills or entrypoints):**
+   ```bash
+   python3 harness/install_project.py /absolute/path/to/your-project --project your-project-name --apply
+   ```
+   See [docs/project-setup.md](docs/project-setup.md) for preview and validation steps.
+
+---
+
+## Get updates from upstream
+
+Pull the latest improvements anytime from your `agentic-harness` clone:
 
 ```bash
-python3 harness/audit.py --config harness-config.json log --record session-record.json
+cd /path/to/agentic-harness
+git pull --ff-only origin main
 ```
 
-- Read back the exclusive JSONL output before claiming persistence. Existing records remain untouched. Never include credentials, raw transcripts, or sensitive personal data.
-- Use string lists for all fields above except `session_id`. Keep each list to three items and each string to 120 characters.
-- Reuse the session ID across checkpoints. Optional nonempty, unpadded `conversation_id` groups distinct phase IDs; `phase` is metadata. No legacy suffix inference or rewriting occurs.
-- `references_prior_sessions` names existing journal files; external file/line and chat/turn citations belong in `source_references`.
+- Your personal/local files (`AGENTS.local.md`, `.harness/local.json`, `harness-config.json`, `conversations/`, `harness/reports/`, `.harness/handoffs/`, `codex/config.local.toml`) are gitignored and will not be overwritten.
+- If you **symlinked** the harness into another project, updates apply immediately.
+- If you **copied** the harness into another project, review diffs and re-copy updated files from `harness/` and `.agents/skills/`.
 
-## Review evidence
+---
 
-```bash
-python3 harness/audit.py --config harness-config.json audit
-python3 harness/audit.py --config harness-config.json audit --write
-python3 -m unittest discover -s tests -v
-```
+## Contribute back (Pull Requests)
 
-- Default audit is read-only; `--write` saves separately under the configured report directory.
-- Freshness uses timezone-aware record timestamps. Exact observations count across distinct conversation identities (fallback: session IDs), subject to the configured threshold.
-- Inspect original evidence; malformed records/unresolved references are reported, legacy automation/audit outputs excluded. Summaries cannot recover missing journals. Suggestions are never automatically implemented.
-- Scheduling requires separate setup and an absolute config path. Notify only on actionable changes, failures, or required input; journal text cannot authorize edits/messages.
+Teammate improvements, bug fixes, and new tool bridges/profiles are welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) for the full guide, or follow the quick checklist:
 
-## Reusable skills
+1. Create a branch from `main`:
+   ```bash
+   git checkout main && git pull --ff-only origin main
+   git checkout -b feat/short-description
+   ```
+2. Make your changes (keep personal/local config and secrets out of Git).
+3. Run the test suite and whitespace check before committing:
+   ```bash
+   python3 -m unittest discover -s tests -v
+   git diff --check
+   ```
+4. If an AI assistant helped author the commit or PR, include `Co-authored by: <active agent name> (AI)` in your commit message and PR description (per [harness/CORE.md](harness/CORE.md)).
+5. Push your branch (or fork) and open a Pull Request against `main` on [darius-despain/agentic-harness](https://github.com/darius-despain/agentic-harness).
 
-- [Development](.agents/skills/harness-development-loop/SKILL.md): implement requested behavior, verify, report blockers.
-  - Optional Codex-specific [orchestrated mode](.agents/skills/harness-development-loop/references/orchestration.md) uses the configured Sol driver, bounded Terra/Luna mechanical workers, independent verification and scoped cleanup. Astra provides a single tool-free advisory at its trigger. These routing controls are separate from tool selection. Invoke with `$harness-development-loop orchestrated mode: fix <behavior> in <checkout>`. Other profiles retain the portable single-agent loop unless supported native delegation is explicitly established.
-- [PR review](.agents/skills/harness-pr-review/SKILL.md): inspect PR/branch with an independent reviewer; recommend a merge decision. Posting requires authorization.
-- [Session evidence](.agents/skills/harness-session-evidence/SKILL.md): save/verify sanitized outcomes or recover source-backed context.
-- [Handoff](.agents/skills/harness-handoff/SKILL.md): private brief and copyable next-chat prompt; clarify materially different objectives. Local scoped commits may be appropriate; pushing requires an explicit request.
-- [Improvement](.agents/skills/harness-improvement-loop/SKILL.md): evidence-backed harness changes or an explicit no-gap result.
-- Invoke by natural language or `$harness-development-loop fix <behavior> in <checkout>`; substitute the relevant skill name/objective. Confirm the skill is loaded. Copy entire folders, preserving existing skills and references.
+---
 
-## Tiered model routing
+## Workflows & repository map
 
-Optional Codex-specific routing is separate from selecting a tool profile. It
-preserves the existing router and config defaults without running them at startup.
+### Five core workflows ([.agents/skills/](.agents/skills/))
+- **Develop & verify:** [.agents/skills/harness-development-loop/SKILL.md](.agents/skills/harness-development-loop/SKILL.md)
+- **PR / branch review:** [.agents/skills/harness-pr-review/SKILL.md](.agents/skills/harness-pr-review/SKILL.md)
+- **Session evidence / journaling:** [.agents/skills/harness-session-evidence/SKILL.md](.agents/skills/harness-session-evidence/SKILL.md)
+- **Session handoff:** [.agents/skills/harness-handoff/SKILL.md](.agents/skills/harness-handoff/SKILL.md)
+- **Evidence-based improvement:** [.agents/skills/harness-improvement-loop/SKILL.md](.agents/skills/harness-improvement-loop/SKILL.md)
 
-- Tier 1 delegates mechanical work to `gpt-6.1-terra` or configured `gpt-6-luna`, with low reasoning, temperature 0.15, a 60-second worker timeout and bounded output.
-- Tier 2 runs the interactive driver on `gpt-6.1-sol` at medium reasoning. High/max require architectural refactoring, concurrency debugging or schema contract planning.
-- Tier 3 uses `gpt-6-astra` for one tool-free blueprint after two consecutive failures on the same task/file or spec, or for zero-context domain planning. Sol receives the handoff for implementation and verification.
-
-```bash
-python3 harness/model_routing.py --config harness-config.json check
-python3 harness/model_routing.py --config harness-config.json route orchestrator
-python3 harness/model_routing.py --config harness-config.json route verifier --parallel
-```
-
-The [routing reference](docs/model-routing.md) covers configuration, JSONL failure
-events, parallel worker adapters, the one-shot advisory transport and linked
-consumer commands. Hosts must enforce the requested controls. Current OpenAI API
-adapters must reject the low-reasoning-plus-temperature worker combination because
-the provider accepts temperature only with `reasoning.effort` set to `none`.
-[Official compatibility guidance](https://developers.openai.com/api/docs/guides/latest-model#update-api-and-model-parameters).
-
-## Live global installation with symlinks
-
-- Read [installation and Git](docs/installation-and-git.md#live-global-installation-with-symlinks) before changing global setup. Keep the source clone stable; restart Codex after configuration/skill changes.
-
-## Git inventory and readiness
-
-- Follow the [Git workflow](.agents/skills/harness-development-loop/references/git-workflow.md); inventory is not authentication, cleanliness, synchronization, or push permission.
-- Read prior access checkpoints; run configured `--repository NAME --readiness` before network Git in each fresh session. Retry failures only after a credential/executor change; use independent results for Git and `gh`.
-- See [setup/reference](docs/installation-and-git.md#git-inventory-and-readiness) for config and linked consumer layouts.
-
-## Optional local Git guards
-
-- Read [guard setup](docs/installation-and-git.md#optional-local-git-guards) before enabling adapters; preserve existing hooks and `core.hooksPath`.
-- Checks are read-only, optional, and grant no permissions. Private-path and runtime attribution rules apply even when hooks do not run.
-
-## Agent evaluations
-
-See [the offline orchestrator evaluation framework](evals/agents/README.md) for
-scripted multi-turn calibration, model adapter configuration, scoring and JSON results.
+### Repository layout & deep-dive docs
+- [AGENTS.md](AGENTS.md) — minimal session entrypoint; [harness/CORE.md](harness/CORE.md) — shared operational & credential rules; [harness/TASKS.md](harness/TASKS.md) — Markdown task pilot
+- [docs/agent-tools.md](docs/agent-tools.md) — tool profiles, startup precedence, and adding a new assistant profile
+- [docs/project-setup.md](docs/project-setup.md) — logger-only installation (`audit.py`, `harness-config.json`)
+- [docs/installation-and-git.md](docs/installation-and-git.md) — global Codex symlinks, Git preflight/readiness, and optional local Git hooks (`git_guard.py`)
+- [docs/model-routing.md](docs/model-routing.md) — optional Codex-specific tiered model routing (`model_routing.py`)
+- [evals/agents/README.md](evals/agents/README.md) — offline orchestrator evaluation framework
+- [docs/skill-inventory.md](docs/skill-inventory.md), [docs/iteration-notes.md](docs/iteration-notes.md), [docs/harness-suggestions.md](docs/harness-suggestions.md), [GUARDRAIL.md](GUARDRAIL.md) — background notes and history

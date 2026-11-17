@@ -88,6 +88,8 @@ Choose whichever level of adoption fits your workflow:
    python3 harness/install_project.py /absolute/path/to/your-project --project your-project-name --apply
    ```
    See [docs/project-setup.md](docs/project-setup.md) for preview and validation steps.
+4. **Team / org overlay (without forking):**
+   Keep `agentic-harness` generic and layer private team rules or internal skills in a small separate repo (or per-project `AGENTS.md`). See [docs/team-overlay.md](docs/team-overlay.md) and [templates/team-overlay/](templates/team-overlay/).
 
 ---
 

@@ -1,0 +1,10 @@
+/.harness/local.json
+/AGENTS.local.md
+/CLAUDE.local.md
+harness-config.json
+conversations/
+harness/reports/
+.harness/handoffs/
+.env
+.env.*
+!.env.example

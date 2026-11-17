@@ -38,17 +38,23 @@ Use this pattern when your team (for example, **MIQA**) wants shared, private te
 
 ## How teammates use it day to day
 
-1. Clone both repos side by side (e.g. under `~/workspace/`):
+1. Clone both repos side by side (e.g. under `~/workspace/`). Replace
+   `OVERLAY_REPOSITORY_URL` with your team overlay's URL:
    ```bash
    git clone https://github.com/darius-despain/agentic-harness.git
-   git clone <your-private-team-overlay-url>
+   git clone OVERLAY_REPOSITORY_URL team-harness
    ```
-2. Open the target project (or the team overlay) in their AI tool and start with:
-   > Read `AGENTS.md` (and `../agentic-harness/AGENTS.md` if referenced); use the `<profile>` profile.
-3. Pull generic harness updates anytime without touching team rules:
-   ```bash
-   cd ~/workspace/agentic-harness && git pull --ff-only origin main
-   ```
+2. In the sibling layout, `../agentic-harness` from `team-harness/` points to the
+   shared checkout. If the overlay is nested in a project workspace and named
+   `agentic-harness`, that relative path returns to the overlay itself. Record the
+   actual shared checkout path in the overlay's gitignored `AGENTS.local.md`.
+   Before using that checkout, confirm that it contains `harness/CORE.md` and
+   check its Git origin against the shared repository your team uses.
+3. Open the target project or overlay in the AI tool and start with:
+   > Read the team overlay's `AGENTS.md` and follow its shared harness and tool-profile instructions.
+4. To update the shared harness, run `git pull --ff-only origin main` from the
+   verified shared checkout root. To update team rules, run it from the overlay
+   checkout root.
 
 ---
 

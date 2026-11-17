@@ -5,8 +5,11 @@ This file layers team- or project-specific conventions on top of the shared
 
 ## 1. Load the shared harness first
 
-1. Resolve the shared `agentic-harness` checkout (for example, `../agentic-harness`
-   relative to this repo, or the path configured in `AGENTS.local.md`).
+1. Resolve the shared `agentic-harness` checkout using the path configured in
+   this overlay's optional `AGENTS.local.md`, or `../agentic-harness` relative to
+   this overlay in a sibling layout. Verify the resolved directory is distinct
+   from this overlay, contains `harness/CORE.md`, and has the expected shared Git
+   origin. If those checks fail, ask for the shared checkout path.
 2. Follow `AGENTS.md` in `agentic-harness` to select the active tool profile
    (`codex`, `antigravity`, `claude-code`, or `generic`) and load `harness/CORE.md`
    plus that single profile.

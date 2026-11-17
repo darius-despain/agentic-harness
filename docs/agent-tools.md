@@ -69,6 +69,32 @@ wins. Keep the selection across turns. Say â€œswitch to the antigravity profileâ
 to change it; stop applying the former profile. Never infer a choice from native
 instruction filenames, installed CLIs on disk, subscriptions or a prior handoff.
 
+## Session close-out
+
+Before replying to finish non-trivial work, the agent runs the shared
+[journal close-out](../harness/CORE.md) when the project has a valid logger
+config and the configured journal is writable. This applies to substantive
+read-only work and sessions without a task skill. The agent prepares the
+sanitized summary, runs `audit.py log`, and verifies the new file.
+
+- [Codex hooks](https://developers.openai.com/codex/hooks) document `Stop` at
+  turn completion and an advisory `SessionEnd` at normal main-thread shutdown.
+  `Stop` can request one continuation, guarded by `stop_hook_active`.
+- [Antigravity hooks](https://antigravity.google/docs/hooks) document `Stop`
+  for the App, IDE, and CLI at execution-loop termination. A reminder could
+  use `fullyIdle` and `terminationReason` to target normal, idle stops, with a
+  guard against repeated continuation.
+
+An opt-in adapter could compare runtime session IDs against this project's
+sanitized journal. Reliable per-task detection within a resumed chat would
+also need a task or turn identifier recorded at close-out. Treat hook payloads
+as potentially sensitive and retain only the identifiers and status fields
+needed for the check. A stop event supplies no sanitized summary, so backfill
+requires an independently supplied sanitized record. The harness ships no
+session hook. Coverage depends on the client loading the instructions, the
+agent reaching close-out, and write access. Abrupt exits and skipped close-out
+can leave a gap.
+
 ## Save local preferences
 
 Nothing is saved by default. To prefer Codex in one project while retaining easy

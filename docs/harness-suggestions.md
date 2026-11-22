@@ -1,25 +1,45 @@
-# Follow-up suggestions — 2026-11-15
+# Harness roadmap
 
-This request identifies switching costs between Codex and Antigravity. Current
-source also exposes opportunities below. The latest local journal
-(`conversations/2026-10-23-cdcf38e33f744a92ac5f11af2cbf66b9.jsonl:1`) records
-onboarding, not recent cross-tool behavior. Only that latest record was read;
-no broad historical audit was run. These proposals draw on current source and
-local Git history, not recurring-failure claims or measured cost savings.
-Before publication, `origin/main` was fetched at `a09a256`; its newer tiered
-routing and Markdown task pilot were integrated, updating the routing proposal.
+## Goal and why now
 
-| Priority | Suggestion | Evidence and next useful check |
-| --- | --- | --- |
-| Implemented | Shared rules, one selected profile, local preferences, native bridges and a missing-selection prompt | This request; prior README described Codex-targeted installation and the development fast path prescribed `gpt-6-sol`. See [tool setup](agent-tools.md). |
-| Next | Add a preview/apply full-workflow installer with safe merge instructions and an installation manifest | `harness/install_project.py:1` installs the logger only; workflows still need manual copying/merging. Extend its safety approach with conflict and stale-copy checks before automatic upgrades. |
-| Next | Extend optional orchestration through capability-based native adapters | Newly fetched `origin/main` already aligns the Codex tier policy, compact telemetry and evaluations. Preserve that integration; validate native delegation controls before extending it to other tools. Keep every adapter outside default startup. |
-| Next | Exercise the Markdown task pilot across tools and small tasks | Commit `a09a256` added roadmap/task templates and approval/review gates. Measure missing context and repeated approvals in actual use; keep existing authorization across tool switches instead of restarting task planning. |
-| Next | Add CI for the offline unit suite, instruction links and bridge/profile completeness | No `.github/workflows/` is present here. Recent commits `43fb5bf`, `7c87879`, `e62e3c5`, and `84a4b61` added focused regressions worth running on each change. Native discovery needs separate smoke sessions. |
-| Later | Add optional measured startup/context timing and native tool smoke receipts | Commit `b0a7964` targeted token consumption. Loading one profile does not measure tokens, latency or subscription costs. Collect opt-in nonsecret measurements before changing budgets. |
-| Later | Modernize the global installer with preview and separate instructions from account configuration | `harness/install_links.py` mutates directly and may copy/link private Codex config. Selection should never require running it. Preserve behavior pending a separately reviewed migration. |
+Make verification repeatable across Codex and Antigravity and enforce the
+orchestrated workflow where the host supports it. The harness currently has one
+developer and no CI compute minutes available. Run checks in the environment
+implementing each change. The owner approved this priority order on 2026-11-22.
 
-Portable single-agent workflows are available now. Native delegation APIs,
-automatic model routing, subscription failover, global settings changes and
-cross-project rollout need concrete requirements and tool-specific verification.
-They are not implemented by selecting a tool profile.
+## Ordered priorities
+
+1. **[HARN-02](tasks/harn-02.md) · One local verification check and an early handoff.** Use the
+   project's own behavioral check and record what ran, the result and the tested
+   state. Use a small local script or an opt-in hook where deterministic
+   enforcement helps the implementation. Carry the task and existing approval
+   from Codex to Antigravity and confirm that stale evidence triggers a rerun.
+   Exercise a routine fix and a small contract change to clarify the fast path.
+   [Task pilot](../harness/TASKS.md) · [Native smoke checks](agent-tools.md#smoke-checks-and-limits)
+2. **[HARN-03](tasks/harn-03.md) · Enforce the opt-in loop on one host.** Verify supported worker
+   settings and demonstrate a denied out-of-scope write on the pilot host before
+   extending orchestration. Then enforce ownership, receipt freshness and retry
+   limits at dispatch and acceptance. [Worker adapter contract](model-routing.md#worker-adapter-contract)
+3. **[HARN-04](tasks/harn-04.md) and [HARN-05](tasks/harn-05.md) · Define narrow roles and measure review quality.** Set
+   aside regression and clean cases before tuning the reviewer. Compare the
+   current reviewer with separate behavior and evidence reviewers on material
+   findings, false blockers and review time. Try the researcher and UX roles on
+   tasks that need their specific outputs. [Current reviewer](../.agents/skills/harness-pr-review/agents/pr-reviewer.md)
+
+## Deferred work
+
+| Item | When to revisit |
+| --- | --- |
+| **[HARN-01](tasks/harn-01.md) · Shared local and CI checks** | Revisit a common check runner if repeating setup becomes a burden. Revisit hosted CI when compute minutes and collaboration needs justify it. Use the existing local test commands and [optional Git guards](installation-and-git.md#optional-local-git-guards) where they fit current work. |
+| Full project installer | Wait for the consumer pilot to identify setup friction. Start with preview, conflict reporting and an installation manifest if manual setup is the bottleneck. The current installer covers the logger. [Full harness setup](agent-tools.md#install-or-upgrade-a-full-harness) |
+| Additional native adapters | Expand after one host enforces the loop. Keep adapters opt-in. |
+| Startup instrumentation | Record client version, discovery, fallback and startup time during the handoff pilot. Add instrumentation if those observations show a recurring problem worth measuring. |
+| Global installer modernization | Treat preview and separating instructions from account configuration as a distinct project. [Current global installer](installation-and-git.md#live-global-installation-with-symlinks) |
+
+## Completed foundation
+
+The 2026-11-15 review identified switching costs between Codex and Antigravity.
+Shared rules, single-profile selection, local preferences and tool bridges are
+in place. The Markdown task pilot and tiered routing are available for their
+respective workflows. The handoff pilot will verify how the native apps load and
+use them in practice. [Tool setup](agent-tools.md)

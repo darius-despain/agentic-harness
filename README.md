@@ -34,8 +34,10 @@ description, and any acceptance criteria along with the prompt.
 
 If your agent can’t find the development loop by name, ask it to read
 [`.agents/skills/harness-development-loop/SKILL.md`](.agents/skills/harness-development-loop/SKILL.md)
-in the harness checkout. If it asks which tool profile to use, choose your agent
-from [the list below](#set-up-for-your-ai-agent).
+from your project root if the skills are copied or symlinked there. If your
+project points to a shared harness checkout, use the path in that checkout.
+If the agent asks which tool profile to use, choose your agent from
+[the list below](#set-up-for-your-ai-agent).
 
 Start with one ticket and your current model settings. The harness uses one
 agent by default. Multi-agent orchestration requires an explicit request and a

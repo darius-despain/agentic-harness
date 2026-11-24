@@ -2,7 +2,7 @@
 
 A lightweight, optional workflow harness for AI coding assistants—built to work across **Claude Code**, **Codex**, **Antigravity**, **open-source / free-tier IDE & CLI agents**, and **ChatGPT / web chat**.
 
-It gives you five portable Markdown workflows—**implement & verify**, **PR review**, **session journaling**, **handoffs**, and **evidence-based improvement**—plus optional Python helpers (Python 3.9+ standard library only, zero external packages). Nothing here forces a specific model, paid subscription, or background telemetry.
+It gives you portable Markdown workflows for **ticket clarification**, **implementation and verification**, **PR review**, **session journaling**, **handoffs**, and **evidence-based improvement**. Optional Python helpers use the Python 3.9+ standard library. Nothing here forces a specific model, paid subscription, or background telemetry.
 
 ## Your first task
 
@@ -23,19 +23,23 @@ description, and any acceptance criteria along with the prompt.
 
 **The ticket needs clarification**
 
-> Read `AGENTS.md` and help me define what done looks like for the ticket below.
-> Ask me one question at a time, then propose acceptance criteria for me to
-> confirm.
+> Read `AGENTS.md` and use `grill-me` to help me define what done looks like
+> for the ticket below. Ask me one question at a time, then propose acceptance
+> criteria for me to confirm.
+
+You can also ask in plain language, “Grill me on what done looks like for this ticket.”
 
 **I’m not sure where to start**
 
 > Read `AGENTS.md`. I want to work on [goal]. Help me pick a small first task
 > and tell me what you need from me.
 
-If your agent can’t find the development loop by name, ask it to read
-[`.agents/skills/harness-development-loop/SKILL.md`](.agents/skills/harness-development-loop/SKILL.md)
-from your project root if the skills are copied or symlinked there. If your
-project points to a shared harness checkout, use the path in that checkout.
+If your agent can’t find a skill by name, ask it to read the matching file
+directly. Use the path from your project root if the skills are copied or
+symlinked there, or from the shared harness checkout your project uses. Choose
+[`.agents/skills/grill-me/SKILL.md`](.agents/skills/grill-me/SKILL.md) or
+[`.agents/skills/harness-development-loop/SKILL.md`](.agents/skills/harness-development-loop/SKILL.md).
+
 If the agent asks which tool profile to use, choose your agent from
 [the list below](#set-up-for-your-ai-agent).
 
@@ -172,7 +176,9 @@ Teammate improvements, bug fixes, and new tool bridges/profiles are welcome! See
 
 ## Workflows & repository map
 
-### Five core workflows ([.agents/skills/](.agents/skills/))
+### Workflows ([.agents/skills/](.agents/skills/))
+
+- **Clarify a ticket:** [.agents/skills/grill-me/SKILL.md](.agents/skills/grill-me/SKILL.md)
 - **Develop & verify:** [.agents/skills/harness-development-loop/SKILL.md](.agents/skills/harness-development-loop/SKILL.md)
 - **PR / branch review:** [.agents/skills/harness-pr-review/SKILL.md](.agents/skills/harness-pr-review/SKILL.md)
 - **Session evidence / journaling:** [.agents/skills/harness-session-evidence/SKILL.md](.agents/skills/harness-session-evidence/SKILL.md)

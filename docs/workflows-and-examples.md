@@ -6,13 +6,17 @@ Once you have the harness cloned or installed (see [README.md](../README.md)), t
 
 ## The daily loop at a glance
 
+When a ticket is unclear, use `grill-me` to agree on what done looks like before
+starting development. See the [first-task prompt](../README.md#your-first-task)
+or read the [skill](../.agents/skills/grill-me/SKILL.md).
+
 1. **Build or fix something** → `harness-development-loop`
 2. **Get a second pair of eyes before merging** → `harness-pr-review`
 3. **Pause, switch tools, or hand off to tomorrow's chat** → `harness-handoff`
 4. **Save what worked (or what tripped you up)** → `harness-session-evidence`
 5. **Fix recurring workflow friction in the harness** → `harness-improvement-loop`
 
-You don't have to use all five every day. Most teammates start with **development** + **handoff**, then add **PR review** and **session evidence** when working on larger changes.
+Most teammates start with **development** and **handoff**, then add **PR review** and **session evidence** when working on larger changes.
 
 ---
 

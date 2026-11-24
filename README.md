@@ -4,7 +4,46 @@ A lightweight, optional workflow harness for AI coding assistants—built to wor
 
 It gives you five portable Markdown workflows—**implement & verify**, **PR review**, **session journaling**, **handoffs**, and **evidence-based improvement**—plus optional Python helpers (Python 3.9+ standard library only, zero external packages). Nothing here forces a specific model, paid subscription, or background telemetry.
 
-> **Already set up?** Read **[Workflows & Examples](docs/workflows-and-examples.md)** for a practical walkthrough of when to use each skill, copy-pasteable prompts, and real sanitized examples from our sessions.
+## Your first task
+
+Open the project you want to change in your coding agent and start a chat.
+Keep `AGENTS.md` at the project root for discovery. If the project already has
+one, merge in the harness startup instructions. For first-time setup, see
+[Quick start](#quick-start-clone-once) and
+[Use the harness in another project](#use-the-harness-in-another-project).
+
+Pick a prompt and paste it into the chat. For a Trello ticket, paste the title,
+description, and any acceptance criteria along with the prompt.
+
+**The ticket is ready**
+
+> Read `AGENTS.md` and use `harness-development-loop` for the ticket below.
+> Show me your plan and how we’ll check the result. Once I approve the plan,
+> implement it and run the checks.
+
+**The ticket needs clarification**
+
+> Read `AGENTS.md` and help me define what done looks like for the ticket below.
+> Ask me one question at a time, then propose acceptance criteria for me to
+> confirm.
+
+**I’m not sure where to start**
+
+> Read `AGENTS.md`. I want to work on [goal]. Help me pick a small first task
+> and tell me what you need from me.
+
+If your agent can’t find the development loop by name, ask it to read
+[`.agents/skills/harness-development-loop/SKILL.md`](.agents/skills/harness-development-loop/SKILL.md)
+from your project root if the skills are copied or symlinked there. If your
+project points to a shared harness checkout, use the path in that checkout.
+If the agent asks which tool profile to use, choose your agent from
+[the list below](#set-up-for-your-ai-agent).
+
+Start with one ticket and your current model settings. The harness uses one
+agent by default. Multi-agent orchestration requires an explicit request and a
+tool that supports it, and can use more of your quota. See
+[Workflows & Examples](docs/workflows-and-examples.md) for more prompts and when
+to use each skill.
 
 ---
 
@@ -25,7 +64,10 @@ cd agentic-harness
 
 ## Set up for your AI agent
 
-Every session starts with [AGENTS.md](AGENTS.md), which loads [harness/CORE.md](harness/CORE.md) plus **one** matching profile from `harness/profiles/`. Pick the instructions for the tool you use:
+At the start of a session, your agent reads [AGENTS.md](AGENTS.md), then
+[harness/CORE.md](harness/CORE.md) and **one** matching profile from
+`harness/profiles/`. Use the instructions for your tool below if you need to
+tell it where to start.
 
 ### 1. Claude Code (`claude-code`)
 - This repo already includes [CLAUDE.md](CLAUDE.md), which automatically imports `AGENTS.md` and selects the `claude-code` profile.
@@ -39,8 +81,8 @@ Every session starts with [AGENTS.md](AGENTS.md), which loads [harness/CORE.md](
 - **Optional global Codex setup:** See [live global installation with symlinks](docs/installation-and-git.md#live-global-installation-with-symlinks) (`harness/install_links.py`).
 
 ### 3. Antigravity (`antigravity`)
-- This repo includes [.agent/rules/harness.md](.agent/rules/harness.md), which points Antigravity to `AGENTS.md` and selects the `antigravity` profile.
-- **How to start:** Open your project in Antigravity, or say:
+- This repo includes [.agent/rules/harness.md](.agent/rules/harness.md), which tells Antigravity to read the workspace root `AGENTS.md` and use the `antigravity` profile.
+- Open the project in Antigravity. If it doesn’t load the rule, say
   > Read `AGENTS.md`; use the `antigravity` profile.
 
 ### 4. Open-source, free-tier, or other IDE/CLI agents (`generic`)
@@ -75,7 +117,7 @@ For personal, non-secret preferences (like concise updates or local test command
 Choose whichever level of adoption fits your workflow:
 
 1. **Reference from your shared clone (easiest to keep updated):**
-   Point your agent to your local `agentic-harness` clone (or symlink `harness/` and `.agents/skills/` into your project), while keeping `harness-config.json`, `.harness/local.json`, and `AGENTS.local.md` in your project root.
+   Have your project root `AGENTS.md` point to the shared clone’s `AGENTS.md`, or tell your agent to read that file by path. You can also symlink `harness/` and `.agents/skills/` into your project and merge in the startup instructions. Keep `harness-config.json`, `.harness/local.json`, and `AGENTS.local.md` in your project root.
 2. **Copy into a project repository:**
    Follow [Install or upgrade a full harness](docs/agent-tools.md#install-or-upgrade-a-full-harness) to copy `harness/`, `.agents/skills/`, `AGENTS.md`, and any bridges (`CLAUDE.md`, `.agent/rules/harness.md`) into your repo. Add these lines to your project's `.gitignore`:
    ```gitignore

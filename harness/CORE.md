@@ -32,6 +32,7 @@ actual consumer root. Local preferences do not override these safeguards.
 
 Load only the relevant skill; prefer project-local copies, otherwise `~/.agents/skills/`:
 
+- For ticket clarification and plan decisions, use `grill-me/SKILL.md`.
 - Implementation/repair: `harness-development-loop/SKILL.md`.
 - Explicit workflow improvement: `harness-improvement-loop/SKILL.md`.
 - PR/branch review: `harness-pr-review/SKILL.md`.

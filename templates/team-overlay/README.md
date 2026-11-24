@@ -25,9 +25,14 @@ the shared repository you intended to use.
 
 ## Usage
 
-Open your project or this overlay in your AI coding assistant and say:
+Open the project you want to work on in your coding agent. Give the agent the
+path to this overlay’s `AGENTS.md` and say
 
 > Read this overlay's `AGENTS.md` and follow its shared harness and tool-profile instructions.
+
+Then paste your ticket or goal. Use the shared
+[first-task prompts](https://github.com/darius-despain/agentic-harness#your-first-task)
+if you want help starting, clarifying, or choosing a task.
 
 ## Updating
 
